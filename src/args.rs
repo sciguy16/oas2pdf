@@ -19,4 +19,43 @@ impl Args {
     pub fn parse() -> Self {
         Parser::parse()
     }
+
+    pub fn out_file_name(&self) -> PathBuf {
+        if let Some(out) = &self.out {
+            out.clone()
+        } else {
+            let mut out = self.input.clone();
+            if self.latex {
+                out.set_extension("tex");
+            } else {
+                out.set_extension("pdf");
+            }
+            out
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn out_file_name() {
+        let mut args = Args {
+            out: None,
+            latex: false,
+            input: "/tmp/test.yaml".into(),
+        };
+
+        assert_eq!(args.out_file_name(), Path::new("/tmp/test.pdf"));
+        args.latex = true;
+        assert_eq!(args.out_file_name(), Path::new("/tmp/test.tex"));
+
+        args.out = Some("/tmp/some-specified-name.docx".into());
+        assert_eq!(
+            args.out_file_name(),
+            Path::new("/tmp/some-specified-name.docx")
+        );
+    }
 }

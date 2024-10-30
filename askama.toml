@@ -1,0 +1,7 @@
+[general]
+whitespace = "minimize"
+
+[[escaper]]
+path = "crate::tex_escape::Tex"
+extensions = ["tex"]
+
