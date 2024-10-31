@@ -24,6 +24,9 @@
 {% for (path, item) in schema.paths.iter() %}
 
 = {{ path }}
-game
 
-{% endfor %}
+{#% for (method, details) in item.iter() %}
+== game
+{% endfor %#}{# (method, details) #}
+
+{% endfor %}{# (path, item) #}
