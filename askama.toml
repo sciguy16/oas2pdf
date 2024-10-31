@@ -2,6 +2,6 @@
 whitespace = "minimize"
 
 [[escaper]]
-path = "crate::tex_escape::Tex"
-extensions = ["tex"]
+path = "crate::typ_escape::Typ"
+extensions = ["typ"]
 

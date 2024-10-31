@@ -16,9 +16,9 @@ mod filters {
     }
 }
 
-mod tex_escape {
-    pub struct Tex;
-    impl askama_escape::Escaper for Tex {
+mod typ_escape {
+    pub struct Typ;
+    impl askama_escape::Escaper for Typ {
         fn write_escaped<W>(&self, mut wtr: W, input: &str) -> std::fmt::Result
         where
             W: std::fmt::Write,
@@ -64,7 +64,7 @@ fn main() -> Result<()> {
     let args = args::Args::parse();
 
     if !args.latex {
-        check_pdflatex()?;
+        check_typst()?;
     }
 
     let input = std::fs::read_to_string(&args.input)?;
@@ -81,30 +81,21 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let mut tex_file = tempfile::Builder::new()
+    let mut typst_file = tempfile::Builder::new()
         .prefix("oas2pdf")
-        .suffix(".tex")
+        .suffix(".typ")
         .tempfile()?;
-    templ.write_into(&mut tex_file)?;
+    templ.write_into(&mut typst_file)?;
 
-    let status = std::process::Command::new("pdflatex")
-        .args([
-            format!(
-                "-output-directory={}",
-                out_file_name.parent().unwrap().to_str().unwrap()
-            ),
-            format!(
-                "-jobname={}",
-                out_file_name.file_stem().unwrap().to_str().unwrap()
-            ),
-        ])
-        .arg(tex_file.path())
+    let status = std::process::Command::new("typst")
+        .args(["compile", "--format", "pdf"])
+        .args([typst_file.path(), &out_file_name])
         .output()?;
     if !status.status.success() {
-        let tex_file_path = tex_file.path().display().to_string();
-        tex_file.keep()?;
-        return Err(eyre!("pdflatex failed")
-            .with_section(|| eyre!("{tex_file_path}",).header("TeX file:"))
+        let typst_file_path = typst_file.path().display().to_string();
+        typst_file.keep()?;
+        return Err(eyre!("typst failed")
+            .with_section(|| eyre!("{typst_file_path}",).header("Typst file:"))
             .with_section(move || {
                 eyre!("{}", String::from_utf8_lossy(&status.stdout))
                     .header("stdout:")
@@ -118,15 +109,14 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn check_pdflatex() -> Result<()> {
-    let status = std::process::Command::new("pdflatex")
-        .arg("-v")
+fn check_typst() -> Result<()> {
+    let status = std::process::Command::new("typst")
         .status()
-        .with_section(|| "pdflatex not found")?;
+        .with_section(|| "typst not found")?;
     if status.success() {
         Ok(())
     } else {
-        Err(eyre!("pdflatex not found in $PATH"))
+        Err(eyre!("typst not found in $PATH"))
     }
 }
 
@@ -152,7 +142,7 @@ fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
 }
 
 #[derive(Template)]
-#[template(path = "output.tex")]
+#[template(path = "output.typ")]
 struct DocsTemplate<'schema> {
     schema: &'schema OpenAPI,
 }
