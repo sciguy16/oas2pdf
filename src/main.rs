@@ -93,21 +93,24 @@ fn main() -> Result<()> {
 
     let args = args::Args::parse();
 
-    if !args.latex {
+    if !args.typst {
         check_typst()?;
     }
 
     let input = std::fs::read_to_string(&args.input)?;
     let schema = serde_yaml::from_str::<OpenAPI>(&input)?;
-    let _transformed = transform_schema(&schema);
+    let transformed = transform_schema(&schema);
+    dbg!(&transformed);
 
     let out_file_name = args.out_file_name();
 
-    let templ = DocsTemplate { schema: &schema };
-    if args.latex {
+    let templ = DocsTemplate {
+        schema: &transformed,
+    };
+    if args.typst {
         let mut out_file = std::fs::File::create(&out_file_name)?;
         templ.write_into(&mut out_file)?;
-        println!("LaTeX output written to `{}`", out_file_name.display());
+        println!("Typst output written to `{}`", out_file_name.display());
         return Ok(());
     }
 
@@ -186,7 +189,8 @@ fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
 #[derive(Template)]
 #[template(path = "output.typ")]
 struct DocsTemplate<'schema> {
-    schema: &'schema OpenAPI,
+    // schema: &'schema OpenAPI,
+    schema: &'schema TransformedSchema,
 }
 
 #[cfg(test)]

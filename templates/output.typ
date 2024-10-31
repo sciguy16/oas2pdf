@@ -21,12 +21,18 @@
 
 #pagebreak()
 
-{% for (path, item) in schema.paths.iter() %}
+{% for (header, section) in schema.sections.iter() %}
 
-= {{ path }}
+= {{ header }}
 
-{#% for (method, details) in item.iter() %}
-== game
-{% endfor %#}{# (method, details) #}
+{% for (path_name, path) in section.iter() %}
+== {{ path_name}}
+
+{% for (method_name, method) in path.iter() %}
+=== {{ method_name }}
+{{ method.summary.as_ref().unwrap() }}
+{% endfor %}
+
+{% endfor %}{# (method, details) #}
 
 {% endfor %}{# (path, item) #}
