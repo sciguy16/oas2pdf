@@ -1,20 +1,26 @@
 use askama::Template;
 use color_eyre::{eyre::eyre, Help, Result, SectionExt};
-use openapiv3::{OpenAPI, RefOr};
+use openapiv3::{OpenAPI, Parameter, RefOr};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 mod args;
 
-// mod filters {
-//     pub fn bracewrap(input: &str) -> askama::Result<String> {
-//         Ok(format!("{{{input}}}"))
-//     }
+mod filters {
+    use openapiv3::Schema;
 
-//     pub fn brace_escape(input: &str) -> askama::Result<String> {
-//         Ok(input.replace('{', "\\{").replace('}', "\\}"))
-//     }
-// }
+    pub fn format_schema(input: &Schema) -> askama::Result<String> {
+        todo!()
+    }
+
+    //     pub fn bracewrap(input: &str) -> askama::Result<String> {
+    //         Ok(format!("{{{input}}}"))
+    //     }
+
+    //     pub fn brace_escape(input: &str) -> askama::Result<String> {
+    //         Ok(input.replace('{', "\\{").replace('}', "\\}"))
+    //     }
+}
 
 mod typ_escape {
     pub struct Typ;
@@ -41,7 +47,7 @@ type SectionEntry = BTreeMap<PathName, PathMethods>;
 type PathMethods = BTreeMap<Method, PathInfo>;
 
 #[allow(dead_code)]
-#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
 struct TransformedSchema {
     info: Info,
     sections: BTreeMap<SectionName, SectionEntry>,
@@ -63,7 +69,7 @@ sections:
                 parameters: []
 */
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
 struct Info {
     title: String,
     description: Option<String>,
@@ -71,12 +77,12 @@ struct Info {
     version: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
 struct PathInfo {
     summary: Option<String>,
     description: Option<String>,
     operation_id: Option<String>,
-    parameters: Vec<()>,
+    parameters: Vec<Parameter>,
 }
 
 #[allow(dead_code)]
@@ -171,13 +177,21 @@ fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
                 get.tags.first().cloned().unwrap_or_else(|| "Other".into());
             let section = transformed.sections.entry(tag).or_default();
             let path_bit = section.entry(path_name.to_string()).or_default();
+            let parameters = get
+                .parameters
+                .iter()
+                .map(|param| {
+                    let RefOr::Item(param) = param else { panic!() };
+                    param.clone()
+                })
+                .collect();
             path_bit.insert(
                 "get".to_string(),
                 PathInfo {
                     summary: get.summary.clone(),
                     description: get.description.clone(),
                     operation_id: get.operation_id.clone(),
-                    parameters: vec![],
+                    parameters,
                 },
             );
         }
@@ -288,7 +302,44 @@ sections:
           summary: List containers
           description: List containers
           operation_id: findAllContainers
-          parameters: []
+          parameters:
+          - name: all
+            description:  >-
+                Show all containers. Only running containers are shown by default
+                (i.e., this defaults to false)
+            in: query
+            schema:
+                type: boolean
+                default: false
+          - name: limit
+            in: query
+            description: 'Show  last created containers, include non-running ones.'
+            schema:
+              type: integer
+          - name: since
+            in: query
+            description: 'Show only containers created since Id, include non-running ones.'
+            schema:
+              type: string
+          - name: before
+            in: query
+            description: 'Show only containers created before Id, include non-running ones.'
+            schema:
+              type: string
+          - name: size
+            in: query
+            description: '1/True/true or 0/False/false, Show the containers sizes.'
+            schema:
+              type: boolean
+          - name: filters
+            in: query
+            description: >-
+              A JSON encoded value of the filters (a map[string][]string) to
+              process on the containers list
+            schema:
+              type: array
+              items:
+                type: string
             ",
         )
         .unwrap();
