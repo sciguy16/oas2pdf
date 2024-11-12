@@ -19,6 +19,12 @@
 	{% endif %}
 ]
 
+#pagebreak()
+
+#outline(
+	depth: 2,
+	indent: auto,
+)
 
 {% for (header, section) in schema.sections.iter() %}
 
