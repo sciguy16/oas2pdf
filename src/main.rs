@@ -1,17 +1,18 @@
 use askama::Template;
-use color_eyre::{eyre::eyre, Help, Result, SectionExt};
+use color_eyre::Result;
 use openapiv3::{OpenAPI, Parameter, RefOr};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 mod args;
+mod typst_world;
 
 mod filters {
-    use openapiv3::Schema;
+    // use openapiv3::Schema;
 
-    pub fn format_schema(input: &Schema) -> askama::Result<String> {
-        todo!()
-    }
+    // pub fn format_schema(_input: &Schema) -> askama::Result<String> {
+    //     todo!()
+    // }
 
     //     pub fn bracewrap(input: &str) -> askama::Result<String> {
     //         Ok(format!("{{{input}}}"))
@@ -99,10 +100,6 @@ fn main() -> Result<()> {
 
     let args = args::Args::parse();
 
-    if !args.typst {
-        check_typst()?;
-    }
-
     let input = std::fs::read_to_string(&args.input)?;
     let schema = serde_yaml::from_str::<OpenAPI>(&input)?;
     let transformed = transform_schema(&schema);
@@ -119,44 +116,18 @@ fn main() -> Result<()> {
         println!("Typst output written to `{}`", out_file_name.display());
         return Ok(());
     }
+    let rendered = templ.render()?;
 
-    let mut typst_file = tempfile::Builder::new()
-        .prefix("oas2pdf")
-        .suffix(".typ")
-        .tempfile()?;
-    templ.write_into(&mut typst_file)?;
-
-    let status = std::process::Command::new("typst")
-        .args(["compile", "--format", "pdf"])
-        .args([typst_file.path(), &out_file_name])
-        .output()?;
-    if !status.status.success() {
-        let typst_file_path = typst_file.path().display().to_string();
-        typst_file.keep()?;
-        return Err(eyre!("typst failed")
-            .with_section(|| eyre!("{typst_file_path}",).header("Typst file:"))
-            .with_section(move || {
-                eyre!("{}", String::from_utf8_lossy(&status.stdout))
-                    .header("stdout:")
-            })
-            .with_section(move || {
-                eyre!("{}", String::from_utf8_lossy(&status.stderr))
-                    .header("stderr:")
-            }));
-    }
+    let world =
+        typst_world::SystemWorld::new(rendered.as_bytes().into(), rendered)?;
+    let document = typst::compile(&world)
+        .output
+        .expect("Error compiling typst");
+    let pdf = typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default())
+        .expect("Error exporting PDF");
+    std::fs::write(&out_file_name, pdf)?;
 
     Ok(())
-}
-
-fn check_typst() -> Result<()> {
-    let status = std::process::Command::new("typst")
-        .status()
-        .with_section(|| "typst not found")?;
-    if status.success() {
-        Ok(())
-    } else {
-        Err(eyre!("typst not found in $PATH"))
-    }
 }
 
 fn transform_schema(schema: &OpenAPI) -> TransformedSchema {

@@ -6,7 +6,7 @@ pub struct Args {
     #[clap(
         long,
         help = "Output file. If not specified then same as input \
-        	but ending with .pdf"
+        	but ending with .pdf or .typ"
     )]
     pub out: Option<PathBuf>,
     #[clap(long, help = "Output just the generated Typst file")]
