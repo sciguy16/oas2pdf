@@ -8,6 +8,17 @@ then run `oas2pdf --help`.
 To convert a YAML schema to PDF, run e.g. `oas2pdf schema.yaml` or
 `oas2pdf schema.yaml --out some-other-name.pdf`.
 
+## Limitations
+* This has not been tested with a wide variety of schema files - if you have
+  a schema that doesn't work with this tool then please file a PR to add it to
+  the samples directory
+* This currently works by templating fields from the schema directly into a
+  [Typst](https://typst.app) template. As such, it is possible for malicious
+  schemas to read arbitrary files from the filsystem. I don't think there's a
+  mechanism for writing files or executing shell commands, but haven't fully
+  confirmed this. As ever, it is inadvisable to run this on schema files from
+  untrusted sources
+
 ## Licence
 This project is licenced  under either of
 
