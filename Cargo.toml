@@ -2,6 +2,10 @@
 name = "oas2pdf"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["David Young"]
+repository = "https://github.com/sciguy16/oas2pdf"
+description = "Create PDF documentation from OpenAPI schemas"
 
 [dependencies]
 askama = "0.12.1"
