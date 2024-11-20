@@ -1,4 +1,3 @@
-use crate::Result;
 use chrono::{DateTime, Datelike, FixedOffset, Local, Utc};
 use typst::{
     diag::FileResult,
@@ -27,15 +26,12 @@ pub struct SystemWorld {
 
 impl SystemWorld {
     /// Create a new system world.
-    pub fn new(input: Bytes, source: String) -> Result<Self> {
+    pub fn new(input: Bytes, source: String) -> Self {
         let main = FileId::new_fake(VirtualPath::new("/input.typ"));
-
         let library = Library::builder().build();
-
         let fonts = Fonts::searcher().include_system_fonts(true).search();
-        // .search_with(&command.font_args.font_paths);
 
-        Ok(Self {
+        Self {
             main,
             library: LazyHash::new(library),
             book: LazyHash::new(fonts.book),
@@ -43,7 +39,7 @@ impl SystemWorld {
             fonts: fonts.fonts,
             source: Source::detached(source),
             now: Utc::now(),
-        })
+        }
     }
 }
 

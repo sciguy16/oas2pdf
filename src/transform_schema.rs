@@ -1,4 +1,4 @@
-use openapiv3::{OpenAPI, Parameter, RefOr};
+use openapiv3::{OpenAPI, Operation, Parameter, RefOr};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -56,13 +56,41 @@ pub enum HttpMethod {
     Put,
 }
 
+fn extract_path_info(item: &Operation) -> (String, PathInfo) {
+    let tag = item.tags.first().cloned().unwrap_or_else(|| "Other".into());
+
+    let parameters = item
+        .parameters
+        .iter()
+        .map(|param| {
+            let RefOr::Item(param) = param else { panic!() };
+            param.clone()
+        })
+        .collect();
+    (
+        tag,
+        PathInfo {
+            summary: item.summary.clone(),
+            description: item.description.clone(),
+            operation_id: item.operation_id.clone(),
+            parameters,
+        },
+    )
+}
+
 pub fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
     let mut transformed = TransformedSchema::default();
 
-    transformed.info.title = schema.info.title.clone();
-    transformed.info.description = schema.info.description.clone();
-    transformed.info.terms_of_service = schema.info.terms_of_service.clone();
-    transformed.info.version = schema.info.version.clone();
+    transformed.info.title.clone_from(&schema.info.title);
+    transformed
+        .info
+        .description
+        .clone_from(&schema.info.description);
+    transformed
+        .info
+        .terms_of_service
+        .clone_from(&schema.info.terms_of_service);
+    transformed.info.version.clone_from(&schema.info.version);
 
     for (path_name, path_item) in &schema.paths.paths {
         let RefOr::Item(path_item) = path_item else {
@@ -70,105 +98,31 @@ pub fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
         };
 
         if let Some(get) = &path_item.get {
-            let tag =
-                get.tags.first().cloned().unwrap_or_else(|| "Other".into());
+            let (tag, info) = extract_path_info(get);
             let section = transformed.sections.entry(tag).or_default();
             let path_bit = section.entry(path_name.to_string()).or_default();
-            let parameters = get
-                .parameters
-                .iter()
-                .map(|param| {
-                    let RefOr::Item(param) = param else { panic!() };
-                    param.clone()
-                })
-                .collect();
-            path_bit.insert(
-                "get".to_string(),
-                PathInfo {
-                    summary: get.summary.clone(),
-                    description: get.description.clone(),
-                    operation_id: get.operation_id.clone(),
-                    parameters,
-                },
-            );
+            path_bit.insert("get".to_string(), info);
         }
 
         if let Some(post) = &path_item.post {
-            let tag =
-                post.tags.first().cloned().unwrap_or_else(|| "Other".into());
+            let (tag, info) = extract_path_info(post);
             let section = transformed.sections.entry(tag).or_default();
             let path_bit = section.entry(path_name.to_string()).or_default();
-            let parameters = post
-                .parameters
-                .iter()
-                .map(|param| {
-                    let RefOr::Item(param) = param else { panic!() };
-                    param.clone()
-                })
-                .collect();
-            path_bit.insert(
-                "post".to_string(),
-                PathInfo {
-                    summary: post.summary.clone(),
-                    description: post.description.clone(),
-                    operation_id: post.operation_id.clone(),
-                    parameters,
-                },
-            );
+            path_bit.insert("post".to_string(), info);
         }
 
         if let Some(patch) = &path_item.patch {
-            let tag = patch
-                .tags
-                .first()
-                .cloned()
-                .unwrap_or_else(|| "Other".into());
+            let (tag, info) = extract_path_info(patch);
             let section = transformed.sections.entry(tag).or_default();
             let path_bit = section.entry(path_name.to_string()).or_default();
-            let parameters = patch
-                .parameters
-                .iter()
-                .map(|param| {
-                    let RefOr::Item(param) = param else { panic!() };
-                    param.clone()
-                })
-                .collect();
-            path_bit.insert(
-                "patch".to_string(),
-                PathInfo {
-                    summary: patch.summary.clone(),
-                    description: patch.description.clone(),
-                    operation_id: patch.operation_id.clone(),
-                    parameters,
-                },
-            );
+            path_bit.insert("patch".to_string(), info);
         }
 
         if let Some(delete) = &path_item.delete {
-            let tag = delete
-                .tags
-                .first()
-                .cloned()
-                .unwrap_or_else(|| "Other".into());
+            let (tag, info) = extract_path_info(delete);
             let section = transformed.sections.entry(tag).or_default();
             let path_bit = section.entry(path_name.to_string()).or_default();
-            let parameters = delete
-                .parameters
-                .iter()
-                .map(|param| {
-                    let RefOr::Item(param) = param else { panic!() };
-                    param.clone()
-                })
-                .collect();
-            path_bit.insert(
-                "delete".to_string(),
-                PathInfo {
-                    summary: delete.summary.clone(),
-                    description: delete.description.clone(),
-                    operation_id: delete.operation_id.clone(),
-                    parameters,
-                },
-            );
+            path_bit.insert("delete".to_string(), info);
         }
     }
 

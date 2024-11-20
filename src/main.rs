@@ -27,7 +27,7 @@ fn make_tera(template: &Option<PathBuf>) -> Result<tera::Tera> {
     let mut tera = tera::Tera::default();
     match template {
         Some(template) => {
-            tera.add_template_file(template, Some(TEMPLATE_NAME))?
+            tera.add_template_file(template, Some(TEMPLATE_NAME))?;
         }
         None => tera.add_raw_template(TEMPLATE_NAME, DEFAULT_TEMPLATE)?,
     }
@@ -68,7 +68,7 @@ fn do_run(args: &args::Args) -> Result<()> {
     }
 
     let world =
-        typst_world::SystemWorld::new(rendered.as_bytes().into(), rendered)?;
+        typst_world::SystemWorld::new(rendered.as_bytes().into(), rendered);
     let document = typst::compile(&world)
         .output
         .expect("Error compiling typst");
