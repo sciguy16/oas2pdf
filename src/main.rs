@@ -1,9 +1,10 @@
 use color_eyre::Result;
-use openapiv3::{OpenAPI, Parameter, RefOr};
-use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, path::PathBuf};
+use openapiv3::OpenAPI;
+use std::path::PathBuf;
 
 mod args;
+mod transform_schema;
+
 mod typst_world;
 
 fn typst_escaper(input: &str) -> String {
@@ -19,60 +20,6 @@ fn typst_escaper(input: &str) -> String {
 
 const DEFAULT_TEMPLATE: &str = include_str!("../templates/output.typ");
 const TEMPLATE_NAME: &str = "output";
-
-type SectionName = String;
-type Method = String;
-type PathName = String;
-type SectionEntry = BTreeMap<PathName, PathMethods>;
-type PathMethods = BTreeMap<Method, PathInfo>;
-
-#[allow(dead_code)]
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
-struct TransformedSchema {
-    info: Info,
-    sections: BTreeMap<SectionName, SectionEntry>,
-}
-
-/*
-info:
-    title:
-    description:
-    termsOfService:
-    version:
-sections:
-    section_name:
-        - /path:
-            get:
-                summary:
-                description:
-                operation_id:
-                parameters: []
-*/
-
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
-struct Info {
-    title: String,
-    description: Option<String>,
-    terms_of_service: Option<String>,
-    version: String,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
-struct PathInfo {
-    summary: Option<String>,
-    description: Option<String>,
-    operation_id: Option<String>,
-    parameters: Vec<Parameter>,
-}
-
-#[allow(dead_code)]
-enum HttpMethod {
-    Get,
-    Post,
-    Delete,
-    Patch,
-    Put,
-}
 
 fn make_tera(template: &Option<PathBuf>) -> Result<tera::Tera> {
     let mut tera = tera::Tera::default();
@@ -92,17 +39,19 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let args = args::Args::parse();
+    do_run(&args)
+}
 
-    if let Some(template) = args.save_template {
-        std::fs::write(&template, DEFAULT_TEMPLATE.as_bytes())?;
+fn do_run(args: &args::Args) -> Result<()> {
+    if let Some(template) = &args.save_template {
+        std::fs::write(template, DEFAULT_TEMPLATE.as_bytes())?;
         println!("Default template written to {}", template.display());
         return Ok(());
     }
 
     let input = std::fs::read_to_string(&args.input)?;
     let schema = serde_yaml::from_str::<OpenAPI>(&input)?;
-    let transformed = transform_schema(&schema);
-    dbg!(&transformed);
+    let transformed = transform_schema::transform_schema(&schema);
 
     let out_file_name = args.out_file_name();
 
@@ -128,183 +77,154 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
-    let mut transformed = TransformedSchema::default();
-
-    transformed.info.title = schema.info.title.clone();
-    transformed.info.description = schema.info.description.clone();
-    transformed.info.terms_of_service = schema.info.terms_of_service.clone();
-    transformed.info.version = schema.info.version.clone();
-
-    for (path_name, path_item) in &schema.paths.paths {
-        let RefOr::Item(path_item) = path_item else {
-            panic!("References not supported in path items");
-        };
-
-        if let Some(get) = &path_item.get {
-            let tag =
-                get.tags.first().cloned().unwrap_or_else(|| "Other".into());
-            let section = transformed.sections.entry(tag).or_default();
-            let path_bit = section.entry(path_name.to_string()).or_default();
-            let parameters = get
-                .parameters
-                .iter()
-                .map(|param| {
-                    let RefOr::Item(param) = param else { panic!() };
-                    param.clone()
-                })
-                .collect();
-            path_bit.insert(
-                "get".to_string(),
-                PathInfo {
-                    summary: get.summary.clone(),
-                    description: get.description.clone(),
-                    operation_id: get.operation_id.clone(),
-                    parameters,
-                },
-            );
-        }
-    }
-
-    transformed
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
+    use crate::args::Args;
 
-    const SAMPLE:&str = "openapi: 3.0.0
+    const SCHEMA: &str = "
+openapi: 3.0.0
 info:
-  title: Docker Remote API
-  description: The API for each docker installation.
-  termsOfService: 'http://example.com/tos/'
-  version: v1.21
+  title: Some API
+  description: This is an API
+  version: 1.0.0
 paths:
-  /containers/json:
+  /some/path:
     get:
-      summary: List containers
-      description: List containers
-      operationId: findAllContainers
+      summary: an interesting path
+      description: a description
+      operationId: aPath
       parameters:
-        - name: all
+        - name: query
           in: query
-          description: >-
-            Show all containers. Only running containers are shown by default
-            (i.e., this defaults to false)
-          schema:
-            type: boolean
-            default: false
-        - name: limit
-          in: query
-          description: 'Show  last created containers, include non-running ones.'
+          description: a query parameter
           schema:
             type: integer
-        - name: since
-          in: query
-          description: 'Show only containers created since Id, include non-running ones.'
-          schema:
-            type: string
-        - name: before
-          in: query
-          description: 'Show only containers created before Id, include non-running ones.'
-          schema:
-            type: string
-        - name: size
-          in: query
-          description: '1/True/true or 0/False/false, Show the containers sizes.'
-          schema:
-            type: boolean
-        - name: filters
-          in: query
-          description: >-
-            A JSON encoded value of the filters (a map[string][]string) to
-            process on the containers list
-          schema:
-            type: array
-            items:
-              type: string
       responses:
         '200':
-          description: no error
+          description: ok
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ContainerConfig'
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ContainerConfig'
-        '400':
-          description: bad parameter
-        '500':
-          description: server error
-      tags:
-        - Container
+                  type: string
 ";
 
+    fn rand_str() -> String {
+        use rand::distributions::{Alphanumeric, DistString};
+        Alphanumeric.sample_string(&mut rand::thread_rng(), 20)
+    }
+
     #[test]
-    fn test_transform() {
-        let schema = serde_yaml::from_str(SAMPLE).unwrap();
-        let transformed = transform_schema(&schema);
-        let expected = serde_yaml::from_str::<TransformedSchema>(
-            "
-info:
-  title: Docker Remote API
-  description: The API for each docker installation.
-  terms_of_service: 'http://example.com/tos/'
-  version: v1.21
-sections:
-  Container:
-    /containers/json:
-        get:
-          summary: List containers
-          description: List containers
-          operation_id: findAllContainers
-          parameters:
-          - name: all
-            description:  >-
-                Show all containers. Only running containers are shown by default
-                (i.e., this defaults to false)
-            in: query
-            schema:
-                type: boolean
-                default: false
-          - name: limit
-            in: query
-            description: 'Show  last created containers, include non-running ones.'
-            schema:
-              type: integer
-          - name: since
-            in: query
-            description: 'Show only containers created since Id, include non-running ones.'
-            schema:
-              type: string
-          - name: before
-            in: query
-            description: 'Show only containers created before Id, include non-running ones.'
-            schema:
-              type: string
-          - name: size
-            in: query
-            description: '1/True/true or 0/False/false, Show the containers sizes.'
-            schema:
-              type: boolean
-          - name: filters
-            in: query
-            description: >-
-              A JSON encoded value of the filters (a map[string][]string) to
-              process on the containers list
-            schema:
-              type: array
-              items:
-                type: string
-            ",
-        )
-        .unwrap();
-        assert_eq!(transformed, expected);
+    fn test_typst_escaper() {
+        let cases = &[
+            ("some text", None),
+            ("Some\n fancy <i>text</i>", None),
+            (
+                "But this has an _underscore",
+                Some("But this has an \\_underscore"),
+            ),
+        ];
+
+        for &(input, expected) in cases {
+            let escaped = typst_escaper(input);
+            if let Some(expected) = expected {
+                assert_eq!(escaped, expected);
+            } else {
+                assert_eq!(escaped, input);
+            }
+        }
+    }
+
+    #[test]
+    fn save_default_template() {
+        let template_path = format!("/tmp/default-template-{}", rand_str());
+        let args = Args {
+            out: None,
+            typst: false,
+            input: "".into(),
+            save_template: Some((&template_path).into()),
+            template: None,
+        };
+
+        do_run(&args).unwrap();
+
+        let written = std::fs::read_to_string(&template_path).unwrap();
+
+        assert_eq!(written, DEFAULT_TEMPLATE);
+        std::fs::remove_file(template_path).unwrap();
+    }
+
+    #[test]
+    fn typst_template() {
+        let schema_path = format!("/tmp/schema-path-{}", rand_str());
+        let typst_path = format!("{schema_path}.typ");
+        let pdf_path = format!("{schema_path}.pdf");
+
+        std::fs::write(&schema_path, SCHEMA.as_bytes()).unwrap();
+
+        let mut args = Args {
+            out: None,
+            typst: true,
+            input: (&schema_path).into(),
+            save_template: None,
+            template: None,
+        };
+        do_run(&args).unwrap();
+
+        let written = std::fs::read_to_string(&typst_path).unwrap();
+        insta::assert_snapshot!(written);
+
+        // Try rendering the PDF. We can't test the PDF output as it's
+        // nondeterministic (e.g. putting in today's date), but we can
+        // catch typst's rendering errors
+        args.typst = false;
+        do_run(&args).unwrap();
+
+        std::fs::remove_file(pdf_path).unwrap();
+        std::fs::remove_file(typst_path).unwrap();
+        std::fs::remove_file(schema_path).unwrap();
+    }
+
+    #[test]
+    fn custom_template() {
+        const TEMPLATE: &str = "
+{{ info.title }}
+#pagebreak()
+== a section
+{{ info.description }}
+";
+
+        let template_path = format!("/tmp/template-file-{}", rand_str());
+        std::fs::write(&template_path, TEMPLATE.as_bytes()).unwrap();
+        let schema_path = format!("/tmp/schema-file-{}", rand_str());
+        std::fs::write(&schema_path, SCHEMA.as_bytes()).unwrap();
+
+        let typst_path = format!("{schema_path}.typ");
+        let pdf_path = format!("{schema_path}.pdf");
+
+        let mut args = Args {
+            out: None,
+            typst: true,
+            input: (&schema_path).into(),
+            save_template: None,
+            template: Some((&template_path).into()),
+        };
+        do_run(&args).unwrap();
+
+        let written = std::fs::read_to_string(&typst_path).unwrap();
+        insta::assert_snapshot!(written);
+
+        // Try rendering the PDF. We can't test the PDF output as it's
+        // nondeterministic (e.g. putting in today's date), but we can
+        // catch typst's rendering errors
+        args.typst = false;
+        do_run(&args).unwrap();
+
+        std::fs::remove_file(pdf_path).unwrap();
+        std::fs::remove_file(typst_path).unwrap();
+        std::fs::remove_file(schema_path).unwrap();
+        std::fs::remove_file(template_path).unwrap();
     }
 }

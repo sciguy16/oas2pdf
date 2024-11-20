@@ -1,0 +1,59 @@
+---
+source: src/main.rs
+expression: written
+---
+#let title = [ Some API ]
+
+
+#set heading(numbering: "1.")
+#set page(
+  header: align(
+    right + horizon,
+    title
+  ),
+  numbering: "1/1"
+)
+
+#align(horizon)[
+	#align(center, text(27pt)[
+	  *#title*
+	])
+	#align(center, text(24pt)[ This is an API ])
+]
+
+#pagebreak()
+
+#outline(
+	depth: 2,
+	indent: auto,
+)
+
+
+
+#pagebreak()
+= Other
+
+
+
+== /some/path
+
+
+
+=== get - aPath
+an interesting path
+
+a description
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+
+
+	[query],
+	[false],
+	[a query parameter],
+	[],
+
+)
