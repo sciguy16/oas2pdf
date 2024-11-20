@@ -1,4 +1,4 @@
-#let title = [ {{ schema.info.title }} ]
+#let title = [ {{ info.title }} ]
 
 
 #set heading(numbering: "1.")
@@ -14,9 +14,7 @@
 	#align(center, text(27pt)[
 	  *#title*
 	])
-	{% if let Some(description) = schema.info.description %}
-	#align(center, text(24pt)[ {{description}} ])
-	{% endif %}
+	#align(center, text(24pt)[ {{info.description}} ])
 ]
 
 #pagebreak()
@@ -26,31 +24,33 @@
 	indent: auto,
 )
 
-{% for (header, section) in schema.sections.iter() %}
+{% for header,section in sections %}
 
 #pagebreak()
 = {{ header }}
 
-{% for (path_name, path) in section.iter() %}
+{% for path_name,path in section %}
+
 == {{ path_name}}
 
-{% for (method_name, method) in path.iter() %}
-=== {{ method_name }} - {{ method.operation_id.as_ref().unwrap() }}
-{{ method.summary.as_ref().unwrap() }}
+{% for method_name,method in path %}
 
-{{ method.description.as_ref().unwrap() }}
+=== {{ method_name }} - {{ method.operation_id }}
+{{ method.summary }}
+
+{{ method.description }}
 
 ==== Parameters
 #table(
 	columns: 4,
 	[Name], [Required], [Description], [Schema],
 
-{% for param in method.parameters.iter() %}
+{% for param in method.parameters %}
 
 	[{{ param.name }}],
-	[{{ param.required }}],
-	[{{ param.description.as_ref().unwrap() }}],
-	[{{ param.format|fmt("{:?}") }}], 
+	[{{ param.required|default(value="false") }}],
+	[{{ param.description }}],
+	[{{ param.format|default(value="") }}],
 {% endfor %}{# param #}
 )
 

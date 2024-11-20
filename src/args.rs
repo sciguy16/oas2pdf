@@ -13,6 +13,10 @@ pub struct Args {
     pub typst: bool,
     #[clap(help = "Input file")]
     pub input: PathBuf,
+    #[clap(long, help = "Save the default template to a file")]
+    pub save_template: Option<PathBuf>,
+    #[clap(long, help = "Use the provided template instead of the default")]
+    pub template: Option<PathBuf>,
 }
 
 impl Args {
@@ -46,6 +50,8 @@ mod test {
             out: None,
             typst: false,
             input: "/tmp/test.yaml".into(),
+            save_template: None,
+            template: None,
         };
 
         assert_eq!(args.out_file_name(), Path::new("/tmp/test.pdf"));

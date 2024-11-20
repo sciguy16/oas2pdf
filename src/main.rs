@@ -1,45 +1,24 @@
-use askama::Template;
 use color_eyre::Result;
 use openapiv3::{OpenAPI, Parameter, RefOr};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, path::PathBuf};
 
 mod args;
 mod typst_world;
 
-mod filters {
-    // use openapiv3::Schema;
-
-    // pub fn format_schema(_input: &Schema) -> askama::Result<String> {
-    //     todo!()
-    // }
-
-    //     pub fn bracewrap(input: &str) -> askama::Result<String> {
-    //         Ok(format!("{{{input}}}"))
-    //     }
-
-    //     pub fn brace_escape(input: &str) -> askama::Result<String> {
-    //         Ok(input.replace('{', "\\{").replace('}', "\\}"))
-    //     }
-}
-
-mod typ_escape {
-    pub struct Typ;
-    impl askama_escape::Escaper for Typ {
-        fn write_escaped<W>(&self, mut wtr: W, input: &str) -> std::fmt::Result
-        where
-            W: std::fmt::Write,
-        {
-            for chr in input.chars() {
-                if ['_'].contains(&chr) {
-                    wtr.write_str("\\")?;
-                }
-                write!(wtr, "{chr}")?;
-            }
-            Ok(())
+fn typst_escaper(input: &str) -> String {
+    let mut out = String::new();
+    for chr in input.chars() {
+        if ['_'].contains(&chr) {
+            out.push('\\');
         }
+        out.push(chr);
     }
+    out
 }
+
+const DEFAULT_TEMPLATE: &str = include_str!("../templates/output.typ");
+const TEMPLATE_NAME: &str = "output";
 
 type SectionName = String;
 type Method = String;
@@ -95,10 +74,30 @@ enum HttpMethod {
     Put,
 }
 
+fn make_tera(template: &Option<PathBuf>) -> Result<tera::Tera> {
+    let mut tera = tera::Tera::default();
+    match template {
+        Some(template) => {
+            tera.add_template_file(template, Some(TEMPLATE_NAME))?
+        }
+        None => tera.add_raw_template(TEMPLATE_NAME, DEFAULT_TEMPLATE)?,
+    }
+
+    tera.autoescape_on(vec![""]);
+    tera.set_escape_fn(typst_escaper);
+    Ok(tera)
+}
+
 fn main() -> Result<()> {
     color_eyre::install()?;
 
     let args = args::Args::parse();
+
+    if let Some(template) = args.save_template {
+        std::fs::write(&template, DEFAULT_TEMPLATE.as_bytes())?;
+        println!("Default template written to {}", template.display());
+        return Ok(());
+    }
 
     let input = std::fs::read_to_string(&args.input)?;
     let schema = serde_yaml::from_str::<OpenAPI>(&input)?;
@@ -107,16 +106,15 @@ fn main() -> Result<()> {
 
     let out_file_name = args.out_file_name();
 
-    let templ = DocsTemplate {
-        schema: &transformed,
-    };
+    let tera = make_tera(&args.template)?;
+    let tera_context = tera::Context::from_serialize(transformed)?;
+    let rendered = tera.render(TEMPLATE_NAME, &tera_context)?;
+
     if args.typst {
-        let mut out_file = std::fs::File::create(&out_file_name)?;
-        templ.write_into(&mut out_file)?;
+        std::fs::write(&out_file_name, rendered)?;
         println!("Typst output written to `{}`", out_file_name.display());
         return Ok(());
     }
-    let rendered = templ.render()?;
 
     let world =
         typst_world::SystemWorld::new(rendered.as_bytes().into(), rendered)?;
@@ -169,13 +167,6 @@ fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
     }
 
     transformed
-}
-
-#[derive(Template)]
-#[template(path = "output.typ")]
-struct DocsTemplate<'schema> {
-    // schema: &'schema OpenAPI,
-    schema: &'schema TransformedSchema,
 }
 
 #[cfg(test)]
