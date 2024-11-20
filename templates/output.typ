@@ -45,9 +45,6 @@
 	[{{ param.format|default(value="") }}],
 {% endfor %}{# param #}
 )
-
 {% endfor %}{# (method, details) #}
-
 {% endfor %}{# (path_name, path) #}
-
 {% endfor %}{# (path, item) #}

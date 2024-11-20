@@ -68,3 +68,67 @@ paths:
           description: server error
       tags:
         - Container
+  /patch-delete:
+    patch:
+      summary: Patch things
+      description: Patch things
+      operationId: PatchThings
+      parameters:
+        - name: all
+          in: query
+          description: >-
+            Show all containers. Only running containers are shown by default
+            (i.e., this defaults to false)
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: no error
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: boolean
+            text/plain:
+              schema:
+                type: array
+                items:
+                  type: boolean
+        '400':
+          description: bad parameter
+        '500':
+          description: server error
+      tags:
+        - Container
+    delete:
+      summary: Delete things
+      description: Delete things
+      operationId: DeleteThings
+      parameters:
+        - name: thing
+          in: path
+          description: ID of thing to post
+          schema:
+            type: number
+      responses:
+        '200':
+          description: no error
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+            text/plain:
+              schema:
+                type: array
+                items:
+                  type: integer
+        '400':
+          description: bad parameter
+        '500':
+          description: server error
+      tags:
+        - Container

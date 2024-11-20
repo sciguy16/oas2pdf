@@ -92,6 +92,84 @@ pub fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
                 },
             );
         }
+
+        if let Some(post) = &path_item.post {
+            let tag =
+                post.tags.first().cloned().unwrap_or_else(|| "Other".into());
+            let section = transformed.sections.entry(tag).or_default();
+            let path_bit = section.entry(path_name.to_string()).or_default();
+            let parameters = post
+                .parameters
+                .iter()
+                .map(|param| {
+                    let RefOr::Item(param) = param else { panic!() };
+                    param.clone()
+                })
+                .collect();
+            path_bit.insert(
+                "post".to_string(),
+                PathInfo {
+                    summary: post.summary.clone(),
+                    description: post.description.clone(),
+                    operation_id: post.operation_id.clone(),
+                    parameters,
+                },
+            );
+        }
+
+        if let Some(patch) = &path_item.patch {
+            let tag = patch
+                .tags
+                .first()
+                .cloned()
+                .unwrap_or_else(|| "Other".into());
+            let section = transformed.sections.entry(tag).or_default();
+            let path_bit = section.entry(path_name.to_string()).or_default();
+            let parameters = patch
+                .parameters
+                .iter()
+                .map(|param| {
+                    let RefOr::Item(param) = param else { panic!() };
+                    param.clone()
+                })
+                .collect();
+            path_bit.insert(
+                "patch".to_string(),
+                PathInfo {
+                    summary: patch.summary.clone(),
+                    description: patch.description.clone(),
+                    operation_id: patch.operation_id.clone(),
+                    parameters,
+                },
+            );
+        }
+
+        if let Some(delete) = &path_item.delete {
+            let tag = delete
+                .tags
+                .first()
+                .cloned()
+                .unwrap_or_else(|| "Other".into());
+            let section = transformed.sections.entry(tag).or_default();
+            let path_bit = section.entry(path_name.to_string()).or_default();
+            let parameters = delete
+                .parameters
+                .iter()
+                .map(|param| {
+                    let RefOr::Item(param) = param else { panic!() };
+                    param.clone()
+                })
+                .collect();
+            path_bit.insert(
+                "delete".to_string(),
+                PathInfo {
+                    summary: delete.summary.clone(),
+                    description: delete.description.clone(),
+                    operation_id: delete.operation_id.clone(),
+                    parameters,
+                },
+            );
+        }
     }
 
     transformed

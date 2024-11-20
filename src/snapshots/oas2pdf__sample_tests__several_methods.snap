@@ -49,3 +49,57 @@ Get things
 	[],
 
 )
+
+=== post - PostThings
+Post things
+
+Post things
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[thing],
+	[false],
+	[ID of thing to post],
+	[],
+
+)
+
+
+== /patch-delete
+
+=== delete - DeleteThings
+Delete things
+
+Delete things
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[thing],
+	[false],
+	[ID of thing to post],
+	[],
+
+)
+
+=== patch - PatchThings
+Patch things
+
+Patch things
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[all],
+	[false],
+	[Show all containers. Only running containers are shown by default (i.e., this defaults to false)],
+	[],
+
+)

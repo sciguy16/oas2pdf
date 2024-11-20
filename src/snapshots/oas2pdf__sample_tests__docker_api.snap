@@ -31,6 +31,31 @@ expression: "run_sample_test(\"samples/docker.yaml\")"
 #pagebreak()
 = Container
 
+== /containers/create
+
+=== post - createContainer
+Create a container
+
+Create a container
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[false],
+	[Assign the specified name to the container. Must match /?[a-zA-Z0-9\_-]+.],
+	[],
+
+	[Content-Type],
+	[true],
+	[Content Type of input],
+	[],
+
+)
+
+
 == /containers/json
 
 === get - findAllContainers
@@ -76,6 +101,34 @@ List containers
 )
 
 
+== /containers/{id}
+
+=== delete - removeContainer
+Remove a container
+
+Remove the container id from the filesystem
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[v],
+	[false],
+	[1/True/true or 0/False/false, Remove the volumes associated to the container. Default false.],
+	[],
+
+	[force],
+	[false],
+	[1/True/true or 0/False/false, Kill then remove the container. Default false.],
+	[],
+
+)
 
 
 == /containers/{id}/archive
@@ -103,6 +156,49 @@ Get an tar archive of a resource in the filesystem of container id.
 )
 
 
+== /containers/{id}/attach
+
+=== post - attach
+Attach to a container
+
+Attach to the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[logs],
+	[false],
+	[1/True/true or 0/False/false, return logs. Default false],
+	[],
+
+	[stream],
+	[false],
+	[1/True/true or 0/False/false, return stream. Default false],
+	[],
+
+	[stdin],
+	[false],
+	[1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.],
+	[],
+
+	[stdout],
+	[false],
+	[1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.],
+	[],
+
+	[stderr],
+	[false],
+	[1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.],
+	[],
+
+)
 
 
 == /containers/{id}/attach/ws
@@ -150,8 +246,6 @@ Attach to the container id with a websocket.
 )
 
 
-
-
 == /containers/{id}/changes
 
 === get - changes
@@ -177,8 +271,6 @@ Inspect changes on a container’s filesystem
 )
 
 
-
-
 == /containers/{id}/export
 
 === get - export
@@ -197,8 +289,6 @@ Export the contents of container id
 	[],
 
 )
-
-
 
 
 == /containers/{id}/json
@@ -221,6 +311,29 @@ Return low-level information on the container id
 )
 
 
+== /containers/{id}/kill
+
+=== post - kill
+Kill a container
+
+Send a posix signal to a container
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[signal],
+	[false],
+	[Signal to send to the container, integer or string like SIGINT, defaults to SIGKILL],
+	[],
+
+)
 
 
 == /containers/{id}/logs
@@ -273,6 +386,124 @@ Get stdout and stderr logs from the container id. Note: This endpoint works only
 )
 
 
+== /containers/{id}/pause
+
+=== post - pause
+Pause a container
+
+Pause the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+)
+
+
+== /containers/{id}/rename
+
+=== post - rename
+Rename a container
+
+Rename the container id to a new\_name
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[name],
+	[true],
+	[New name for the container],
+	[],
+
+)
+
+
+== /containers/{id}/resize
+
+=== post - resizeContainer
+Resize a container TTY
+
+Resize the TTY for container with id. The unit is number of characters. You must restart the container for the resize to take effect.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[h],
+	[false],
+	[Height of the tty session],
+	[],
+
+	[w],
+	[false],
+	[Width of the tty session],
+	[],
+
+)
+
+
+== /containers/{id}/restart
+
+=== post - restart
+Restart a container
+
+Restart the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[t],
+	[false],
+	[number of seconds to wait before killing the container],
+	[],
+
+)
+
+
+== /containers/{id}/start
+
+=== post - startContainer
+Start a container
+
+Start the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+)
 
 
 == /containers/{id}/stats
@@ -300,6 +531,29 @@ This endpoint returns a live stream of a container’s resource usage statistics
 )
 
 
+== /containers/{id}/stop
+
+=== post - stop
+Stop a container
+
+Stop the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[t],
+	[false],
+	[number of seconds to wait before killing the container],
+	[],
+
+)
 
 
 == /containers/{id}/top
@@ -327,12 +581,343 @@ List processes running inside the container id
 )
 
 
+== /containers/{id}/unpause
 
+=== post - unpause
+Unpause a container
+
+Unpause the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+)
+
+
+== /containers/{id}/wait
+
+=== post - wait
+Wait a container
+
+Block until container id stops, then returns the exit code
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+)
+
+
+
+#pagebreak()
+= Exec
+
+== /containers/{id}/exec
+
+=== post - createExec
+Exec Create
+
+Sets up an exec instance in a running container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[Content-Type],
+	[true],
+	[Content Type Header],
+	[],
+
+	[id],
+	[true],
+	[Container name or id],
+	[],
+
+)
+
+
+== /exec/{id}/json
+
+=== post - findExec
+Exec Inspect
+
+Return low-level information about the exec command id.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[Exec instance id],
+	[],
+
+)
+
+
+== /exec/{id}/resize
+
+=== post - resizeTty
+Exec Resize
+
+Resize the tty session used by the exec command id.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[Exec instance id],
+	[],
+
+	[h],
+	[false],
+	[Height of the tty session],
+	[],
+
+	[w],
+	[false],
+	[Width of the tty session],
+	[],
+
+)
+
+
+== /exec/{id}/start
+
+=== post - startExec
+Exec Start
+
+Starts a previously set up exec instance id. If detach is true, this API returns after starting the exec command. Otherwise, this API sets up an interactive session with the exec command.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[Content-Type],
+	[true],
+	[Content Type Header],
+	[],
+
+	[id],
+	[true],
+	[Exec instance id],
+	[],
+
+)
 
 
 
 #pagebreak()
 = Image
+
+== /build
+
+=== post - build
+Build an image from Dockerfile via stdin
+
+Build an image from Dockerfile via stdin
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[dockerfile],
+	[false],
+	[Path within the build context to the Dockerfile. This is ignored if remote is specified and points to an individual filename.],
+	[],
+
+	[t],
+	[false],
+	[A repository name (and optionally a tag) to apply to the resulting image in case of success.],
+	[],
+
+	[remote],
+	[false],
+	[A Git repository URI or HTTP/HTTPS URI build source. If the URI specifies a filename, the file’s contents are placed into a file called Dockerfile.],
+	[],
+
+	[q],
+	[false],
+	[Suppress verbose build output.],
+	[],
+
+	[nocache],
+	[false],
+	[Do not use the cache when building the image.],
+	[],
+
+	[pull],
+	[false],
+	[Attempt to pull the image even if an older image exists locally],
+	[],
+
+	[rm],
+	[false],
+	[Remove intermediate containers after a successful build (default behavior).],
+	[],
+
+	[forcerm],
+	[false],
+	[always remove intermediate containers (includes rm)],
+	[],
+
+	[memory],
+	[false],
+	[Set memory limit for build.],
+	[],
+
+	[memswap],
+	[false],
+	[Total memory (memory + swap), -1 to disable swap.],
+	[],
+
+	[cpushares],
+	[false],
+	[CPU shares (relative weight).],
+	[],
+
+	[cpusetcpus],
+	[false],
+	[CPUs in which to allow execution (e.g., 0-3, 0,1).],
+	[],
+
+	[cpuperiod],
+	[false],
+	[The length of a CPU period in microseconds.],
+	[],
+
+	[cpuquota],
+	[false],
+	[Microseconds of CPU time that the container can get in a CPU period.],
+	[],
+
+	[buildargs],
+	[false],
+	[Total memory (memory + swap), -1 to disable swap.],
+	[],
+
+	[Content-type],
+	[false],
+	[ Set to 'application/tar'.],
+	[],
+
+	[X-Registry-Config],
+	[false],
+	[A base64-url-safe-encoded Registry Auth Config JSON object],
+	[],
+
+)
+
+
+== /commit
+
+=== post - commit
+Create a new image from a container’s changes
+
+Create a new image from a container’s changes
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[container],
+	[false],
+	[Container id or name to commit],
+	[],
+
+	[repo],
+	[false],
+	[Repository name for the created image],
+	[],
+
+	[tag],
+	[false],
+	[Tag name for the create image],
+	[],
+
+	[comment],
+	[false],
+	[Commit message],
+	[],
+
+	[author],
+	[false],
+	[author (e.g., “John Hannibal Smith “)],
+	[],
+
+	[pause],
+	[false],
+	[1/True/true or 0/False/false, whether to pause the container before committing],
+	[],
+
+	[changes],
+	[false],
+	[Dockerfile instructions to apply while committing],
+	[],
+
+)
+
+
+== /images/create
+
+=== post - createImage
+Create an image
+
+Create an image either by pulling it from the registry or by importing it
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[fromImage],
+	[false],
+	[Name of the image to pull. The name may include a tag or digest. This parameter may only be used when pulling an image.],
+	[],
+
+	[fromSrc],
+	[false],
+	[Source to import. The value may be a URL from which the image can be retrieved or - to read the image from the request body. This parameter may only be used when importing an image.],
+	[],
+
+	[repo],
+	[false],
+	[Repository name given to an image when it is imported. The repo may include a tag. This parameter may only be used when importing an image.],
+	[],
+
+	[tag],
+	[false],
+	[Tag or digest.],
+	[],
+
+	[X-Registry-Config],
+	[false],
+	[A base64-encoded AuthConfig object],
+	[],
+
+)
+
 
 == /images/get
 
@@ -352,8 +937,6 @@ Get a tarball containing all images and metadata for one or more repositories.
 	[],
 
 )
-
-
 
 
 == /images/json
@@ -391,6 +974,19 @@ List Images
 )
 
 
+== /images/load
+
+=== post - load
+Load a tarball with a set of images and tags into docker.
+
+Load a set of images and tags into a Docker repository. See the image tarball format for more details.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+)
 
 
 == /images/search
@@ -413,6 +1009,34 @@ Search for an image on Docker Hub.
 )
 
 
+== /images/{name}
+
+=== delete - removeImage
+Remove an image
+
+Remove the image name from the filesystem
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Image name or id],
+	[],
+
+	[force],
+	[false],
+	[1/True/true or 0/False/false, default false],
+	[],
+
+	[noprune],
+	[false],
+	[1/True/true or 0/False/false, default false.],
+	[],
+
+)
 
 
 == /images/{name}/get
@@ -435,8 +1059,6 @@ Get a tarball containing all images and metadata for the repository specified by
 )
 
 
-
-
 == /images/{name}/history
 
 === get - history
@@ -455,8 +1077,6 @@ Return the history of the image name
 	[],
 
 )
-
-
 
 
 == /images/{name}/json
@@ -479,7 +1099,69 @@ Return low-level information on the image name
 )
 
 
+== /images/{name}/push
 
+=== post - push
+Push an image to the registry
+
+Push the image name on the registry
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Image name or id],
+	[],
+
+	[tag],
+	[false],
+	[The tag to associate with the image on the registry.],
+	[],
+
+	[X-Registry-Auth],
+	[true],
+	[A base64-encoded AuthConfig object],
+	[],
+
+)
+
+
+== /images/{name}/tag
+
+=== post - tag
+Tag an image into a repository
+
+Tag the image name into a repository
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Image name or id],
+	[],
+
+	[repo],
+	[false],
+	[The repository to tag in.],
+	[],
+
+	[force],
+	[false],
+	[1/True/true or 0/False/false, default false],
+	[],
+
+	[tag],
+	[false],
+	[The new tag name.],
+	[],
+
+)
 
 
 
@@ -501,6 +1183,19 @@ Ping the docker server
 )
 
 
+== /auth
+
+=== post - checkAuthentication
+Check auth configuration
+
+Check auth configuration.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+)
 
 
 == /events
@@ -533,8 +1228,6 @@ Get container events from docker, either in real time via streaming, or via poll
 )
 
 
-
-
 == /info
 
 === get - getSystemInformation
@@ -550,8 +1243,6 @@ Display system-wide information.
 )
 
 
-
-
 == /version
 
 === get - getVersion
@@ -565,9 +1256,6 @@ Show the docker version information
 	[Name], [Required], [Description], [Schema],
 
 )
-
-
-
 
 
 
@@ -594,9 +1282,39 @@ List networks.
 )
 
 
+== /networks/create
+
+=== post - createNetwork
+Create network
+
+Create network.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+)
 
 
 == /networks/{id}
+
+=== delete - removeNetwork
+Remove a network
+
+Remove a network
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[Network id or name],
+	[],
+
+)
 
 === get - findNetwork
 Inspect network
@@ -616,7 +1334,44 @@ Inspect network.
 )
 
 
+== /networks/{id}/connect
 
+=== post - connect
+Connect a container to a network
+
+Connect a container to a network.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[Network id or name],
+	[],
+
+)
+
+
+== /networks/{id}/disconnect
+
+=== post - disconnect
+Disconnect a container to a network
+
+Disconnect a container to a network.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[Network id or name],
+	[],
+
+)
 
 
 
@@ -643,9 +1398,39 @@ List volumes.
 )
 
 
+== /volumes/create
+
+=== post - createVolume
+Create a volume
+
+Create a volume.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+)
 
 
 == /volumes/{name}
+
+=== delete - removeVolume
+Remove a volume
+
+Instruct the driver to remove the volume.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Volume name or id],
+	[],
+
+)
 
 === get - findVolume
 Inspect a volume
