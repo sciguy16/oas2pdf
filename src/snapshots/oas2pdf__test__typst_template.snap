@@ -4,7 +4,6 @@ expression: written
 ---
 #let title = [ Some API ]
 
-
 #set heading(numbering: "1.")
 #set page(
   header: align(
@@ -29,15 +28,10 @@ expression: written
 )
 
 
-
 #pagebreak()
 = Other
 
-
-
 == /some/path
-
-
 
 === get - aPath
 an interesting path
@@ -48,8 +42,6 @@ a description
 #table(
 	columns: 4,
 	[Name], [Required], [Description], [Schema],
-
-
 
 	[query],
 	[false],

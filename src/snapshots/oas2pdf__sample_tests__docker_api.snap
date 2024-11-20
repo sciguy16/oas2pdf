@@ -1,0 +1,665 @@
+---
+source: src/sample_tests.rs
+expression: "run_sample_test(\"samples/docker.yaml\")"
+---
+#let title = [ Docker Remote API ]
+
+#set heading(numbering: "1.")
+#set page(
+  header: align(
+    right + horizon,
+    title
+  ),
+  numbering: "1/1"
+)
+
+#align(horizon)[
+	#align(center, text(27pt)[
+	  *#title*
+	])
+	#align(center, text(24pt)[ The API for each docker installation. ])
+]
+
+#pagebreak()
+
+#outline(
+	depth: 2,
+	indent: auto,
+)
+
+
+#pagebreak()
+= Container
+
+== /containers/json
+
+=== get - findAllContainers
+List containers
+
+List containers
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[all],
+	[false],
+	[Show all containers. Only running containers are shown by default (i.e., this defaults to false)],
+	[],
+
+	[limit],
+	[false],
+	[Show  last created containers, include non-running ones.],
+	[],
+
+	[since],
+	[false],
+	[Show only containers created since Id, include non-running ones.],
+	[],
+
+	[before],
+	[false],
+	[Show only containers created before Id, include non-running ones.],
+	[],
+
+	[size],
+	[false],
+	[1/True/true or 0/False/false, Show the containers sizes.],
+	[],
+
+	[filters],
+	[false],
+	[A JSON encoded value of the filters (a map[string][]string) to process on the containers list],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/archive
+
+=== get - getArchive
+Get an archive of a filesystem resource in a container
+
+Get an tar archive of a resource in the filesystem of container id.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[path],
+	[true],
+	[Resource in the container’s filesystem to archive.],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/attach/ws
+
+=== get - attachWebsocket
+Attach to a container (websocket)
+
+Attach to the container id with a websocket.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[logs],
+	[false],
+	[1/True/true or 0/False/false, return logs. Default false],
+	[],
+
+	[stream],
+	[false],
+	[1/True/true or 0/False/false, return stream. Default false],
+	[],
+
+	[stdin],
+	[false],
+	[1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.],
+	[],
+
+	[stdout],
+	[false],
+	[1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.],
+	[],
+
+	[stderr],
+	[false],
+	[1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/changes
+
+=== get - changes
+Inspect changes on a container’s filesystem
+
+Inspect changes on a container’s filesystem
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[kind],
+	[false],
+	[Kind of changes],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/export
+
+=== get - export
+Export a container
+
+Export the contents of container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/json
+
+=== get - findContainer
+Inspect a container
+
+Return low-level information on the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/logs
+
+=== get - logs
+Get container logs
+
+Get stdout and stderr logs from the container id. Note: This endpoint works only for containers with json-file logging driver.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[follow],
+	[false],
+	[1/True/true or 0/False/false, return stream. Default false.],
+	[],
+
+	[stdout],
+	[false],
+	[1/True/true or 0/False/false, show stdout log. Default false.],
+	[],
+
+	[stderr],
+	[false],
+	[1/True/true or 0/False/false, show stderr log. Default false.],
+	[],
+
+	[since],
+	[false],
+	[UNIX timestamp (integer) to filter logs. Specifying a timestamp will only output log-entries since that timestamp. Default: 0 (unfiltered)],
+	[],
+
+	[timestamps],
+	[false],
+	[1/True/true or 0/False/false, print timestamps for every log line. ],
+	[],
+
+	[tail],
+	[false],
+	[Output specified number of lines at the end of logs: all or . Default all.],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/stats
+
+=== get - stats
+Get container stats based on resource usage
+
+This endpoint returns a live stream of a container’s resource usage statistics.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[stream],
+	[false],
+	[Stream stats],
+	[],
+
+)
+
+
+
+
+== /containers/{id}/top
+
+=== get - listProcesses
+List processes running inside a container
+
+List processes running inside the container id
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[ps\_args],
+	[false],
+	[ps arguments to use (e.g., aux)],
+	[],
+
+)
+
+
+
+
+
+
+#pagebreak()
+= Image
+
+== /images/get
+
+=== get - saveAll
+Get a tarball containing all images.
+
+Get a tarball containing all images and metadata for one or more repositories.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[names],
+	[false],
+	[Image names to filter],
+	[],
+
+)
+
+
+
+
+== /images/json
+
+=== get - findAllImages
+List Images
+
+List Images
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[all],
+	[false],
+	[Show all images. Only images from a final layer (no children) are shown by default.],
+	[],
+
+	[filters],
+	[false],
+	[A JSON encoded value of the filters (a map[string][]string) to process on the containers list],
+	[],
+
+	[filter],
+	[false],
+	[Only return images with the specified name.],
+	[],
+
+	[digests],
+	[false],
+	[Show digest information, default to false],
+	[],
+
+)
+
+
+
+
+== /images/search
+
+=== get - search
+Search images
+
+Search for an image on Docker Hub.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[term],
+	[false],
+	[Term to search],
+	[],
+
+)
+
+
+
+
+== /images/{name}/get
+
+=== get - save
+Get a tarball containing all images in a repository
+
+Get a tarball containing all images and metadata for the repository specified by name.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Image name or id],
+	[],
+
+)
+
+
+
+
+== /images/{name}/history
+
+=== get - history
+Get the history of an image
+
+Return the history of the image name
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Image name or id],
+	[],
+
+)
+
+
+
+
+== /images/{name}/json
+
+=== get - findImage
+Inspect an image
+
+Return low-level information on the image name
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Image name or id],
+	[],
+
+)
+
+
+
+
+
+
+#pagebreak()
+= Misc
+
+== /\_ping
+
+=== get - ping
+Ping the docker server
+
+Ping the docker server
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+)
+
+
+
+
+== /events
+
+=== get - getEvents
+Monitor Docker’s events
+
+Get container events from docker, either in real time via streaming, or via polling (using since).
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[since],
+	[false],
+	[Timestamp used for polling],
+	[],
+
+	[until],
+	[false],
+	[Timestamp used for polling],
+	[],
+
+	[filters],
+	[false],
+	[A json encoded value of the filters (a map[string][]string) to process on the event list.],
+	[],
+
+)
+
+
+
+
+== /info
+
+=== get - getSystemInformation
+Display system-wide information
+
+Display system-wide information.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+)
+
+
+
+
+== /version
+
+=== get - getVersion
+Show the docker version information
+
+Show the docker version information
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+)
+
+
+
+
+
+
+#pagebreak()
+= Network
+
+== /networks
+
+=== get - findAllNetworks
+List networks
+
+List networks.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[filters],
+	[false],
+	[JSON encoded value of the filters (a map[string][]string) to process on the networks list.],
+	[],
+
+)
+
+
+
+
+== /networks/{id}
+
+=== get - findNetwork
+Inspect network
+
+Inspect network.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[Network id or name],
+	[],
+
+)
+
+
+
+
+
+
+#pagebreak()
+= Volume
+
+== /volumes
+
+=== get - findAllVolumes
+List volumes
+
+List volumes.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[filters],
+	[false],
+	[JSON encoded value of the filters (a map[string][]string) to process on the volumes list],
+	[],
+
+)
+
+
+
+
+== /volumes/{name}
+
+=== get - findVolume
+Inspect a volume
+
+Inspect a volume.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[name],
+	[true],
+	[Volume name or id],
+	[],
+
+)

@@ -4,8 +4,10 @@ use std::path::PathBuf;
 
 mod args;
 mod transform_schema;
-
 mod typst_world;
+
+#[cfg(test)]
+mod sample_tests;
 
 fn typst_escaper(input: &str) -> String {
     let mut out = String::new();
@@ -111,7 +113,7 @@ paths:
                   type: string
 ";
 
-    fn rand_str() -> String {
+    pub fn rand_str() -> String {
         use rand::distributions::{Alphanumeric, DistString};
         Alphanumeric.sample_string(&mut rand::thread_rng(), 20)
     }
