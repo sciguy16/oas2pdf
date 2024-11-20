@@ -26,3 +26,8 @@ fn run_sample_test<P: AsRef<Path>>(input: P) -> String {
 fn docker_api() {
     insta::assert_snapshot!(run_sample_test("samples/docker.yaml"));
 }
+
+#[test]
+fn several_methods() {
+    insta::assert_snapshot!(run_sample_test("samples/several-methods.yaml"));
+}
