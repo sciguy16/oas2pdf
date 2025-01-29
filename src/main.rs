@@ -114,8 +114,8 @@ paths:
 ";
 
     pub fn rand_str() -> String {
-        use rand::distributions::{Alphanumeric, DistString};
-        Alphanumeric.sample_string(&mut rand::thread_rng(), 20)
+        use rand::distr::{Alphanumeric, SampleString};
+        Alphanumeric.sample_string(&mut rand::rng(), 20)
     }
 
     #[test]
