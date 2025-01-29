@@ -23,7 +23,7 @@ fn typst_escaper(input: &str) -> String {
 const DEFAULT_TEMPLATE: &str = include_str!("../templates/output.typ");
 const TEMPLATE_NAME: &str = "output";
 
-fn make_tera(template: &Option<PathBuf>) -> Result<tera::Tera> {
+fn make_tera(template: Option<&PathBuf>) -> Result<tera::Tera> {
     let mut tera = tera::Tera::default();
     match template {
         Some(template) => {
@@ -57,7 +57,7 @@ fn do_run(args: &args::Args) -> Result<()> {
 
     let out_file_name = args.out_file_name();
 
-    let tera = make_tera(&args.template)?;
+    let tera = make_tera(args.template.as_ref())?;
     let tera_context = tera::Context::from_serialize(transformed)?;
     let rendered = tera.render(TEMPLATE_NAME, &tera_context)?;
 
