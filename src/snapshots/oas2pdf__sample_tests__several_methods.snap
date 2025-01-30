@@ -36,7 +36,7 @@ expression: "run_sample_test(\"samples/several-methods.yaml\")"
 === get - GetThings
 Get things
 
-Get things
+
 
 ==== Parameters
 #table(

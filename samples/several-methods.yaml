@@ -7,7 +7,6 @@ paths:
   /get-post:
     get:
       summary: Get things
-      description: Get things
       operationId: GetThings
       parameters:
         - name: all
