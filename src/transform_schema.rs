@@ -1,4 +1,4 @@
-use openapiv3::{OpenAPI, Operation, Parameter, RefOr};
+use openapiv3::{OpenAPI, Operation, Parameter, RefOr, RequestBody};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -45,6 +45,7 @@ pub struct PathInfo {
     pub description: Option<String>,
     pub operation_id: Option<String>,
     pub parameters: Vec<Parameter>,
+    pub request_body: Option<RefOr<RequestBody>>,
 }
 
 #[allow(dead_code)]
@@ -74,6 +75,7 @@ fn extract_path_info(item: &Operation) -> (String, PathInfo) {
             description: item.description.clone(),
             operation_id: item.operation_id.clone(),
             parameters,
+            request_body: item.request_body.clone(),
         },
     )
 }
@@ -109,6 +111,13 @@ pub fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
             let section = transformed.sections.entry(tag).or_default();
             let path_bit = section.entry(path_name.to_string()).or_default();
             path_bit.insert("post".to_string(), info);
+        }
+
+        if let Some(put) = &path_item.put {
+            let (tag, info) = extract_path_info(put);
+            let section = transformed.sections.entry(tag).or_default();
+            let path_bit = section.entry(path_name.to_string()).or_default();
+            path_bit.insert("put".to_string(), info);
         }
 
         if let Some(patch) = &path_item.patch {

@@ -45,6 +45,27 @@
 	[{{ param.format|default(value="") }}],
 {% endfor %}{# param #}
 )
+
+{% if method.request_body %}
+==== Request body
+{% if method.request_body is reference %}
+REF: {{ method.request_body["$ref"] }}
+{% else %}
+{{ method.request_body.description|default(value="") }}
+
+
+#table(
+	columns: 2,
+{% for field,ty in method.request_body.content %}
+	[{{ field }}],
+	[{{ ty.schema|json_encode() }}],
+{% endfor %}{# field,ty #}
+)
+
+{% endif %}
+
+{%- endif -%}{# body #}
+
 {% endfor %}{# (method, details) #}
 {% endfor %}{# (path_name, path) #}
 {% endfor %}{# (path, item) #}

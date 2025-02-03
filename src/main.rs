@@ -1,6 +1,9 @@
+#![expect(clippy::unnecessary_wraps)]
+
 use color_eyre::Result;
 use openapiv3::OpenAPI;
 use std::path::PathBuf;
+use tera::Value;
 
 mod args;
 mod transform_schema;
@@ -9,10 +12,13 @@ mod typst_world;
 #[cfg(test)]
 mod sample_tests;
 
+const DEFAULT_TEMPLATE: &str = include_str!("../templates/output.typ");
+const TEMPLATE_NAME: &str = "output";
+
 fn typst_escaper(input: &str) -> String {
     let mut out = String::new();
     for chr in input.chars() {
-        if ['_'].contains(&chr) {
+        if ['_', '#', '$'].contains(&chr) {
             out.push('\\');
         }
         out.push(chr);
@@ -20,8 +26,14 @@ fn typst_escaper(input: &str) -> String {
     out
 }
 
-const DEFAULT_TEMPLATE: &str = include_str!("../templates/output.typ");
-const TEMPLATE_NAME: &str = "output";
+fn ref_or_is_ref(value: Option<&Value>, _args: &[Value]) -> tera::Result<bool> {
+    if let Some(Value::Object(object)) = value {
+        if object.contains_key("$ref") {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
 
 fn make_tera(template: Option<&PathBuf>) -> Result<tera::Tera> {
     let mut tera = tera::Tera::default();
@@ -34,6 +46,7 @@ fn make_tera(template: Option<&PathBuf>) -> Result<tera::Tera> {
 
     tera.autoescape_on(vec![""]);
     tera.set_escape_fn(typst_escaper);
+    tera.register_tester("reference", ref_or_is_ref);
     Ok(tera)
 }
 

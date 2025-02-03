@@ -1,0 +1,68 @@
+---
+source: src/sample_tests.rs
+expression: "run_sample_test(\"samples/request-body.yaml\")"
+---
+#let title = [ Several Methods API ]
+
+#set heading(numbering: "1.")
+#set page(
+  header: align(
+    right + horizon,
+    title
+  ),
+  numbering: "1/1"
+)
+
+#align(horizon)[
+	#align(center, text(27pt)[
+	  *#title*
+	])
+	#align(center, text(24pt)[ A simple API with a request body ])
+]
+
+#pagebreak()
+
+#outline(
+	depth: 2,
+	indent: auto,
+)
+
+
+#pagebreak()
+= Container
+
+== /post
+
+=== post - PostThings
+Post things
+
+Post things
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[thing],
+	[false],
+	[ID of thing to post],
+	[],
+
+)
+
+
+==== Request body
+
+The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"type":"string"}],
+
+	[text/plain],
+	[{"type":"string"}],
+
+)

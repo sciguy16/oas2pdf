@@ -31,3 +31,8 @@ fn docker_api() {
 fn several_methods() {
     insta::assert_snapshot!(run_sample_test("samples/several-methods.yaml"));
 }
+
+#[test]
+fn request_body() {
+    insta::assert_snapshot!(run_sample_test("samples/request-body.yaml"));
+}

@@ -56,6 +56,26 @@ Create a container
 )
 
 
+==== Request body
+
+Container to create
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+
+	[text/plain],
+	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+
+)
+
+
+
+
+
 == /containers/json
 
 === get - findAllContainers
@@ -101,6 +121,9 @@ List containers
 )
 
 
+
+
+
 == /containers/{id}
 
 === delete - removeContainer
@@ -131,6 +154,9 @@ Remove the container id from the filesystem
 )
 
 
+
+
+
 == /containers/{id}/archive
 
 === get - getArchive
@@ -154,6 +180,56 @@ Get an tar archive of a resource in the filesystem of container id.
 	[],
 
 )
+
+
+
+
+=== put - putArchive
+Extract an archive of files or folders to a directory in a container
+
+Upload a tar archive to be extracted to a path in the filesystem of container id.
+
+==== Parameters
+#table(
+	columns: 4,
+	[Name], [Required], [Description], [Schema],
+
+	[id],
+	[true],
+	[The container id or name],
+	[],
+
+	[path],
+	[true],
+	[Path to a directory in the container to extract the archive’s contents into. ],
+	[],
+
+	[noOverwriteDirNonDir],
+	[false],
+	[If “1”, “true”, or “True” then it will be an error if unpacking the given content would cause an existing directory to be replaced with a non-directory and vice versa.],
+	[],
+
+)
+
+
+==== Request body
+
+The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"type":"string"}],
+
+	[text/plain],
+	[{"type":"string"}],
+
+)
+
+
+
 
 
 == /containers/{id}/attach
@@ -201,6 +277,9 @@ Attach to the container id
 )
 
 
+
+
+
 == /containers/{id}/attach/ws
 
 === get - attachWebsocket
@@ -246,6 +325,9 @@ Attach to the container id with a websocket.
 )
 
 
+
+
+
 == /containers/{id}/changes
 
 === get - changes
@@ -271,6 +353,9 @@ Inspect changes on a container’s filesystem
 )
 
 
+
+
+
 == /containers/{id}/export
 
 === get - export
@@ -291,6 +376,9 @@ Export the contents of container id
 )
 
 
+
+
+
 == /containers/{id}/json
 
 === get - findContainer
@@ -309,6 +397,9 @@ Return low-level information on the container id
 	[],
 
 )
+
+
+
 
 
 == /containers/{id}/kill
@@ -334,6 +425,9 @@ Send a posix signal to a container
 	[],
 
 )
+
+
+
 
 
 == /containers/{id}/logs
@@ -386,6 +480,9 @@ Get stdout and stderr logs from the container id. Note: This endpoint works only
 )
 
 
+
+
+
 == /containers/{id}/pause
 
 === post - pause
@@ -404,6 +501,9 @@ Pause the container id
 	[],
 
 )
+
+
+
 
 
 == /containers/{id}/rename
@@ -429,6 +529,9 @@ Rename the container id to a new\_name
 	[],
 
 )
+
+
+
 
 
 == /containers/{id}/resize
@@ -461,6 +564,9 @@ Resize the TTY for container with id. The unit is number of characters. You must
 )
 
 
+
+
+
 == /containers/{id}/restart
 
 === post - restart
@@ -486,6 +592,9 @@ Restart the container id
 )
 
 
+
+
+
 == /containers/{id}/start
 
 === post - startContainer
@@ -504,6 +613,9 @@ Start the container id
 	[],
 
 )
+
+
+
 
 
 == /containers/{id}/stats
@@ -531,6 +643,9 @@ This endpoint returns a live stream of a container’s resource usage statistics
 )
 
 
+
+
+
 == /containers/{id}/stop
 
 === post - stop
@@ -554,6 +669,9 @@ Stop the container id
 	[],
 
 )
+
+
+
 
 
 == /containers/{id}/top
@@ -581,6 +699,9 @@ List processes running inside the container id
 )
 
 
+
+
+
 == /containers/{id}/unpause
 
 === post - unpause
@@ -601,6 +722,9 @@ Unpause the container id
 )
 
 
+
+
+
 == /containers/{id}/wait
 
 === post - wait
@@ -619,6 +743,9 @@ Block until container id stops, then returns the exit code
 	[],
 
 )
+
+
+
 
 
 
@@ -650,6 +777,26 @@ Sets up an exec instance in a running container id
 )
 
 
+==== Request body
+
+Exec configuration
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"\$ref":"\#/components/schemas/ExecConfig"}],
+
+	[text/plain],
+	[{"\$ref":"\#/components/schemas/ExecConfig"}],
+
+)
+
+
+
+
+
 == /exec/{id}/json
 
 === post - findExec
@@ -668,6 +815,9 @@ Return low-level information about the exec command id.
 	[],
 
 )
+
+
+
 
 
 == /exec/{id}/resize
@@ -700,6 +850,9 @@ Resize the tty session used by the exec command id.
 )
 
 
+
+
+
 == /exec/{id}/start
 
 === post - startExec
@@ -723,6 +876,26 @@ Starts a previously set up exec instance id. If detach is true, this API returns
 	[],
 
 )
+
+
+==== Request body
+
+Exec configuration
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"\$ref":"\#/components/schemas/ExecStartConfig"}],
+
+	[text/plain],
+	[{"\$ref":"\#/components/schemas/ExecStartConfig"}],
+
+)
+
+
+
 
 
 
@@ -829,6 +1002,26 @@ Build an image from Dockerfile via stdin
 )
 
 
+==== Request body
+
+The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"type":"string"}],
+
+	[text/plain],
+	[{"type":"string"}],
+
+)
+
+
+
+
+
 == /commit
 
 === post - commit
@@ -879,6 +1072,26 @@ Create a new image from a container’s changes
 )
 
 
+==== Request body
+
+The container configuration
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+
+	[text/plain],
+	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+
+)
+
+
+
+
+
 == /images/create
 
 === post - createImage
@@ -919,6 +1132,23 @@ Create an image either by pulling it from the registry or by importing it
 )
 
 
+==== Request body
+
+Image content if the value - has been specified in fromSrc query parameter
+
+
+#table(
+	columns: 2,
+
+	[application/octet-stream],
+	[{"format":"binary","type":"string"}],
+
+)
+
+
+
+
+
 == /images/get
 
 === get - saveAll
@@ -937,6 +1167,9 @@ Get a tarball containing all images and metadata for one or more repositories.
 	[],
 
 )
+
+
+
 
 
 == /images/json
@@ -974,6 +1207,9 @@ List Images
 )
 
 
+
+
+
 == /images/load
 
 === post - load
@@ -987,6 +1223,26 @@ Load a set of images and tags into a Docker repository. See the image tarball fo
 	[Name], [Required], [Description], [Schema],
 
 )
+
+
+==== Request body
+
+Tar archive containing images
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"type":"string"}],
+
+	[text/plain],
+	[{"type":"string"}],
+
+)
+
+
+
 
 
 == /images/search
@@ -1007,6 +1263,9 @@ Search for an image on Docker Hub.
 	[],
 
 )
+
+
+
 
 
 == /images/{name}
@@ -1039,6 +1298,9 @@ Remove the image name from the filesystem
 )
 
 
+
+
+
 == /images/{name}/get
 
 === get - save
@@ -1057,6 +1319,9 @@ Get a tarball containing all images and metadata for the repository specified by
 	[],
 
 )
+
+
+
 
 
 == /images/{name}/history
@@ -1079,6 +1344,9 @@ Return the history of the image name
 )
 
 
+
+
+
 == /images/{name}/json
 
 === get - findImage
@@ -1097,6 +1365,9 @@ Return low-level information on the image name
 	[],
 
 )
+
+
+
 
 
 == /images/{name}/push
@@ -1127,6 +1398,9 @@ Push the image name on the registry
 	[],
 
 )
+
+
+
 
 
 == /images/{name}/tag
@@ -1165,6 +1439,9 @@ Tag the image name into a repository
 
 
 
+
+
+
 #pagebreak()
 = Misc
 
@@ -1183,6 +1460,9 @@ Ping the docker server
 )
 
 
+
+
+
 == /auth
 
 === post - checkAuthentication
@@ -1196,6 +1476,26 @@ Check auth configuration.
 	[Name], [Required], [Description], [Schema],
 
 )
+
+
+==== Request body
+
+Authentication to check
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"\$ref":"\#/components/schemas/AuthConfig"}],
+
+	[text/plain],
+	[{"\$ref":"\#/components/schemas/AuthConfig"}],
+
+)
+
+
+
 
 
 == /events
@@ -1228,6 +1528,9 @@ Get container events from docker, either in real time via streaming, or via poll
 )
 
 
+
+
+
 == /info
 
 === get - getSystemInformation
@@ -1243,6 +1546,9 @@ Display system-wide information.
 )
 
 
+
+
+
 == /version
 
 === get - getVersion
@@ -1256,6 +1562,9 @@ Show the docker version information
 	[Name], [Required], [Description], [Schema],
 
 )
+
+
+
 
 
 
@@ -1282,6 +1591,9 @@ List networks.
 )
 
 
+
+
+
 == /networks/create
 
 === post - createNetwork
@@ -1295,6 +1607,26 @@ Create network.
 	[Name], [Required], [Description], [Schema],
 
 )
+
+
+==== Request body
+
+Network configuration
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"\$ref":"\#/components/schemas/NetworkCreateConfig"}],
+
+	[text/plain],
+	[{"\$ref":"\#/components/schemas/NetworkCreateConfig"}],
+
+)
+
+
+
 
 
 == /networks/{id}
@@ -1316,6 +1648,9 @@ Remove a network
 
 )
 
+
+
+
 === get - findNetwork
 Inspect network
 
@@ -1332,6 +1667,9 @@ Inspect network.
 	[],
 
 )
+
+
+
 
 
 == /networks/{id}/connect
@@ -1354,6 +1692,13 @@ Connect a container to a network.
 )
 
 
+==== Request body
+
+REF: \#/components/requestBodies/ContainerConnect
+
+
+
+
 == /networks/{id}/disconnect
 
 === post - disconnect
@@ -1372,6 +1717,13 @@ Disconnect a container to a network.
 	[],
 
 )
+
+
+==== Request body
+
+REF: \#/components/requestBodies/ContainerConnect
+
+
 
 
 
@@ -1398,6 +1750,9 @@ List volumes.
 )
 
 
+
+
+
 == /volumes/create
 
 === post - createVolume
@@ -1411,6 +1766,26 @@ Create a volume.
 	[Name], [Required], [Description], [Schema],
 
 )
+
+
+==== Request body
+
+Volume configuration
+
+
+#table(
+	columns: 2,
+
+	[application/json],
+	[{"\$ref":"\#/components/schemas/VolumeConfig"}],
+
+	[text/plain],
+	[{"\$ref":"\#/components/schemas/VolumeConfig"}],
+
+)
+
+
+
 
 
 == /volumes/{name}
@@ -1431,6 +1806,9 @@ Instruct the driver to remove the volume.
 	[],
 
 )
+
+
+
 
 === get - findVolume
 Inspect a volume
