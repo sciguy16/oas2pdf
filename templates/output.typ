@@ -41,7 +41,7 @@
 {% for param in method.parameters %}
 	[{{ param.name }}],
 	[{{ param.required|default(value="false") }}],
-	[{{ param.description }}],
+	[{{ param.description|default(value="") }}],
 	[{{ param.format|default(value="") }}],
 {% endfor %}{# param #}
 )

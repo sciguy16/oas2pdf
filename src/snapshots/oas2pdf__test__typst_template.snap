@@ -48,4 +48,9 @@ a description
 	[a query parameter],
 	[],
 
+	[query-no-description],
+	[false],
+	[],
+	[],
+
 )

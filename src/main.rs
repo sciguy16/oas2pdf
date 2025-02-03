@@ -102,6 +102,10 @@ paths:
           description: a query parameter
           schema:
             type: integer
+        - name: query-no-description
+          in: query
+          schema:
+            type: integer
       responses:
         '200':
           description: ok
