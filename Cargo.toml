@@ -18,9 +18,9 @@ serde = { version = "1.0.214", features = ["derive"] }
 serde_json = "1.0.128"
 serde_yaml = "0.9.34"
 tera = "1.20.0"
-typst = "0.12.0"
-typst-kit = { version = "0.12.0", features = ["embed-fonts", "fonts"] }
-typst-pdf = "0.12.0"
+typst = "0.13.1"
+typst-kit = { version = "0.13.1", features = ["embed-fonts", "fonts"] }
+typst-pdf = "0.13.1"
 
 [dev-dependencies]
 insta = "1.41.1"

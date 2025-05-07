@@ -129,8 +129,10 @@ fn do_run(args: &args::Args) -> Result<()> {
         return Ok(());
     }
 
-    let world =
-        typst_world::SystemWorld::new(rendered.as_bytes().into(), rendered);
+    let world = typst_world::SystemWorld::new(
+        typst::foundations::Bytes::from_string(rendered.clone()),
+        rendered,
+    );
     let document = typst::compile(&world)
         .output
         .expect("Error compiling typst");
