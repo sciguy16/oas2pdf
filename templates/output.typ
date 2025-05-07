@@ -13,10 +13,11 @@
 }
 
 #set page(
-  header: align(
-    right + horizon,
-    title
-  ),
+  header: [
+  	{{ param.org|default(value="") }}
+    #h(1fr)
+    #title
+  ],
   numbering: "1/1"
 )
 

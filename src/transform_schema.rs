@@ -279,6 +279,25 @@ sections:
               type: array
               items:
                 type: string
+          responses:
+            200:
+              description: 'no error'
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContainerConfig'
+                text/plain:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContainerConfig'
+            400:
+              description: 'bad parameter'
+            500:
+              description: 'server error'
+schemas: {}
             ",
         )
         .unwrap();

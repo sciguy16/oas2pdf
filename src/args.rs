@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Parser)]
 pub struct Args {
@@ -17,6 +17,29 @@ pub struct Args {
     pub save_template: Option<PathBuf>,
     #[clap(long, help = "Use the provided template instead of the default")]
     pub template: Option<PathBuf>,
+    #[clap(
+        long,
+        value_parser = parse_key_val::<String, String>,
+        help = "Key=value pairs to pass to the template. Reference as e.g. \
+            `param.org`"
+    )]
+    pub param: Vec<(String, String)>,
+}
+
+/// Parse a single key-value pair
+fn parse_key_val<T, U>(
+    s: &str,
+) -> Result<(T, U), Box<dyn std::error::Error + Send + Sync + 'static>>
+where
+    T: std::str::FromStr,
+    T::Err: std::error::Error + Send + Sync + 'static,
+    U: std::str::FromStr,
+    U::Err: std::error::Error + Send + Sync + 'static,
+{
+    let pos = s
+        .find('=')
+        .ok_or_else(|| format!("invalid KEY=value: no `=` found in `{s}`"))?;
+    Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
 }
 
 impl Args {
@@ -37,6 +60,10 @@ impl Args {
             out
         }
     }
+
+    pub fn param(&self) -> HashMap<String, String> {
+        self.param.iter().cloned().collect()
+    }
 }
 
 #[cfg(test)]
@@ -52,6 +79,7 @@ mod test {
             input: "/tmp/test.yaml".into(),
             save_template: None,
             template: None,
+            param: vec![],
         };
 
         assert_eq!(args.out_file_name(), Path::new("/tmp/test.pdf"));

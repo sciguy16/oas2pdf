@@ -4,7 +4,18 @@ expression: "run_sample_test(\"samples/docker.yaml\")"
 ---
 #let title = [ Docker Remote API ]
 
-#set heading(numbering: "1.")
+#let numbering-limited(max-level, schema) = (..numbers) => {
+  if numbers.pos().len() <= max-level {
+    numbering(schema, ..numbers)
+  }
+}
+#set heading(numbering: numbering-limited(3, "1."))
+#let appendix(body) = {
+  set heading(numbering: numbering-limited(1, "A."), supplement: [Appendix])
+  counter(heading).update(0)
+  body
+}
+
 #set page(
   header: align(
     right + horizon,
@@ -33,44 +44,73 @@ expression: "run_sample_test(\"samples/docker.yaml\")"
 
 == /containers/create
 
-=== post - createContainer
+=== POST - createContainer
 Create a container
 
 Create a container
+
+
+
+- application/json: #link(label("ContainerConfig"), "ContainerConfig")
+
+- text/plain: #link(label("ContainerConfig"), "ContainerConfig")
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[false],
-	[Assign the specified name to the container. Must match /?[a-zA-Z0-9\_-]+.],
-	[],
+===== query: name 
 
-	[Content-Type],
-	[true],
-	[Content Type of input],
-	[],
+Assign the specified name to the container. Must match /?[a-zA-Z0-9\_-]+.
 
-)
+- type:  string
+- style: form
 
 
-==== Request body
-
-Container to create
 
 
-#table(
-	columns: 2,
+===== header: Content-Type (required)
 
-	[application/json],
-	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+Content Type of input
 
-	[text/plain],
-	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+- type:  string
+- style: simple
 
-)
+
+
+
+
+
+==== Response
+
+==== 201
+no error
+
+
+
+- application/json: #link(label("ContainerCreateResult"), "ContainerCreateResult")
+
+- text/plain: #link(label("ContainerCreateResult"), "ContainerCreateResult")
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 406
+impossible to attach
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -78,47 +118,101 @@ Container to create
 
 == /containers/json
 
-=== get - findAllContainers
+=== GET - findAllContainers
 List containers
 
 List containers
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[all],
-	[false],
-	[Show all containers. Only running containers are shown by default (i.e., this defaults to false)],
-	[],
+===== query: all 
 
-	[limit],
-	[false],
-	[Show  last created containers, include non-running ones.],
-	[],
+Show all containers. Only running containers are shown by default (i.e., this defaults to false)
 
-	[since],
-	[false],
-	[Show only containers created since Id, include non-running ones.],
-	[],
+- type:  boolean
+- style: form
 
-	[before],
-	[false],
-	[Show only containers created before Id, include non-running ones.],
-	[],
 
-	[size],
-	[false],
-	[1/True/true or 0/False/false, Show the containers sizes.],
-	[],
 
-	[filters],
-	[false],
-	[A JSON encoded value of the filters (a map[string][]string) to process on the containers list],
-	[],
 
-)
+===== query: limit 
+
+Show  last created containers, include non-running ones.
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: since 
+
+Show only containers created since Id, include non-running ones.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: before 
+
+Show only containers created before Id, include non-running ones.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: size 
+
+1/True/true or 0/False/false, Show the containers sizes.
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: filters 
+
+A JSON encoded value of the filters (a map[string][]string) to process on the containers list
+
+- type:  array
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: array[#link(label("ContainerConfig"), "ContainerConfig")]
+
+- text/plain: array[#link(label("ContainerConfig"), "ContainerConfig")]
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -126,32 +220,71 @@ List containers
 
 == /containers/{id}
 
-=== delete - removeContainer
+=== DELETE - removeContainer
 Remove a container
 
 Remove the container id from the filesystem
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[v],
-	[false],
-	[1/True/true or 0/False/false, Remove the volumes associated to the container. Default false.],
-	[],
+The container id or name
 
-	[force],
-	[false],
-	[1/True/true or 0/False/false, Kill then remove the container. Default false.],
-	[],
+- type:  string
+- style: simple
 
-)
+
+
+
+===== query: v 
+
+1/True/true or 0/False/false, Remove the volumes associated to the container. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: force 
+
+1/True/true or 0/False/false, Kill then remove the container. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -159,74 +292,142 @@ Remove the container id from the filesystem
 
 == /containers/{id}/archive
 
-=== get - getArchive
+=== GET - getArchive
 Get an archive of a filesystem resource in a container
 
 Get an tar archive of a resource in the filesystem of container id.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[path],
-	[true],
-	[Resource in the container’s filesystem to archive.],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
 
 
 
 
-=== put - putArchive
+===== query: path (required)
+
+Resource in the container’s filesystem to archive.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+
+==== 400
+client error, bad parameter, details in JSON response body, one of: must specify path parameter (path cannot be empty) not a directory (path was asserted to be a directory but exists as a file)
+
+
+
+
+==== 404
+no such container or path does not exist inside the container
+
+
+
+
+==== 500
+server error
+
+
+
+
+
+=== PUT - putArchive
 Extract an archive of files or folders to a directory in a container
 
 Upload a tar archive to be extracted to a path in the filesystem of container id.
 
+
+
+- application/json: 
+
+- text/plain: 
+
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[path],
-	[true],
-	[Path to a directory in the container to extract the archive’s contents into. ],
-	[],
+The container id or name
 
-	[noOverwriteDirNonDir],
-	[false],
-	[If “1”, “true”, or “True” then it will be an error if unpacking the given content would cause an existing directory to be replaced with a non-directory and vice versa.],
-	[],
-
-)
+- type:  string
+- style: simple
 
 
-==== Request body
-
-The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.
 
 
-#table(
-	columns: 2,
+===== query: path (required)
 
-	[application/json],
-	[{"type":"string"}],
+Path to a directory in the container to extract the archive’s contents into. 
 
-	[text/plain],
-	[{"type":"string"}],
+- type:  string
+- style: form
 
-)
+
+
+
+===== query: noOverwriteDirNonDir 
+
+If “1”, “true”, or “True” then it will be an error if unpacking the given content would cause an existing directory to be replaced with a non-directory and vice versa.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+The content was extracted successfully
+
+
+
+
+==== 400
+Bad parameter
+
+
+
+
+==== 403
+Permission denied, the volume or container rootfs is marked as read-only.
+
+
+
+
+==== 404
+No such container or path does not exist inside the container
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -234,47 +435,101 @@ The input stream must be a tar archive compressed with one of the following algo
 
 == /containers/{id}/attach
 
-=== post - attach
+=== POST - attach
 Attach to a container
 
 Attach to the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[logs],
-	[false],
-	[1/True/true or 0/False/false, return logs. Default false],
-	[],
+The container id or name
 
-	[stream],
-	[false],
-	[1/True/true or 0/False/false, return stream. Default false],
-	[],
+- type:  string
+- style: simple
 
-	[stdin],
-	[false],
-	[1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.],
-	[],
 
-	[stdout],
-	[false],
-	[1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.],
-	[],
 
-	[stderr],
-	[false],
-	[1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.],
-	[],
 
-)
+===== query: logs 
+
+1/True/true or 0/False/false, return logs. Default false
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stream 
+
+1/True/true or 0/False/false, return stream. Default false
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stdin 
+
+1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stdout 
+
+1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stderr 
+
+1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -282,47 +537,107 @@ Attach to the container id
 
 == /containers/{id}/attach/ws
 
-=== get - attachWebsocket
+=== GET - attachWebsocket
 Attach to a container (websocket)
 
 Attach to the container id with a websocket.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[logs],
-	[false],
-	[1/True/true or 0/False/false, return logs. Default false],
-	[],
+The container id or name
 
-	[stream],
-	[false],
-	[1/True/true or 0/False/false, return stream. Default false],
-	[],
+- type:  string
+- style: simple
 
-	[stdin],
-	[false],
-	[1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.],
-	[],
 
-	[stdout],
-	[false],
-	[1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.],
-	[],
 
-	[stderr],
-	[false],
-	[1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.],
-	[],
 
-)
+===== query: logs 
+
+1/True/true or 0/False/false, return logs. Default false
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stream 
+
+1/True/true or 0/False/false, return stream. Default false
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stdin 
+
+1/True/true or 0/False/false, if stream=true, attach to stdin. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stdout 
+
+1/True/true or 0/False/false, if logs=true, return stdout log, if stream=true, attach to stdout. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: stderr 
+
+1/True/true or 0/False/false, if logs=true, return stderr log, if stream=true, attach to stderr. Default false.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 101
+no error, hints proxy about hijacking
+
+
+
+
+==== 200
+no error, no upgrade header found
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -330,27 +645,61 @@ Attach to the container id with a websocket.
 
 == /containers/{id}/changes
 
-=== get - changes
+=== GET - changes
 Inspect changes on a container’s filesystem
 
 Inspect changes on a container’s filesystem
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[kind],
-	[false],
-	[Kind of changes],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
+
+
+
+
+===== query: kind 
+
+Kind of changes
+
+- type:  integer
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: array[#link(label("ContainerChange"), "ContainerChange")]
+
+- text/plain: array[#link(label("ContainerChange"), "ContainerChange")]
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -358,22 +707,51 @@ Inspect changes on a container’s filesystem
 
 == /containers/{id}/export
 
-=== get - export
+=== GET - export
 Export a container
 
 Export the contents of container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-)
+The container id or name
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: string
+
+- text/plain: string
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -381,22 +759,51 @@ Export the contents of container id
 
 == /containers/{id}/json
 
-=== get - findContainer
+=== GET - findContainer
 Inspect a container
 
 Return low-level information on the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-)
+The container id or name
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: #link(label("Container"), "Container")
+
+- text/plain: #link(label("Container"), "Container")
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -404,27 +811,55 @@ Return low-level information on the container id
 
 == /containers/{id}/kill
 
-=== post - kill
+=== POST - kill
 Kill a container
 
 Send a posix signal to a container
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[signal],
-	[false],
-	[Signal to send to the container, integer or string like SIGINT, defaults to SIGKILL],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
+
+
+
+
+===== query: signal 
+
+Signal to send to the container, integer or string like SIGINT, defaults to SIGKILL
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -432,52 +867,123 @@ Send a posix signal to a container
 
 == /containers/{id}/logs
 
-=== get - logs
+=== GET - logs
 Get container logs
 
 Get stdout and stderr logs from the container id. Note: This endpoint works only for containers with json-file logging driver.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[follow],
-	[false],
-	[1/True/true or 0/False/false, return stream. Default false.],
-	[],
+The container id or name
 
-	[stdout],
-	[false],
-	[1/True/true or 0/False/false, show stdout log. Default false.],
-	[],
+- type:  string
+- style: simple
 
-	[stderr],
-	[false],
-	[1/True/true or 0/False/false, show stderr log. Default false.],
-	[],
 
-	[since],
-	[false],
-	[UNIX timestamp (integer) to filter logs. Specifying a timestamp will only output log-entries since that timestamp. Default: 0 (unfiltered)],
-	[],
 
-	[timestamps],
-	[false],
-	[1/True/true or 0/False/false, print timestamps for every log line. ],
-	[],
 
-	[tail],
-	[false],
-	[Output specified number of lines at the end of logs: all or . Default all.],
-	[],
+===== query: follow 
 
-)
+1/True/true or 0/False/false, return stream. Default false.
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: stdout 
+
+1/True/true or 0/False/false, show stdout log. Default false.
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: stderr 
+
+1/True/true or 0/False/false, show stderr log. Default false.
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: since 
+
+UNIX timestamp (integer) to filter logs. Specifying a timestamp will only output log-entries since that timestamp. Default: 0 (unfiltered)
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: timestamps 
+
+1/True/true or 0/False/false, print timestamps for every log line. 
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: tail 
+
+Output specified number of lines at the end of logs: all or . Default all.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 101
+no error, hints proxy about hijacking
+
+
+
+- application/json: string
+
+- text/plain: string
+
+
+
+
+==== 200
+no error, no upgrade header found
+
+
+
+- application/json: string
+
+- text/plain: string
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -485,22 +991,45 @@ Get stdout and stderr logs from the container id. Note: This endpoint works only
 
 == /containers/{id}/pause
 
-=== post - pause
+=== POST - pause
 Pause a container
 
 Pause the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-)
+The container id or name
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -508,27 +1037,61 @@ Pause the container id
 
 == /containers/{id}/rename
 
-=== post - rename
+=== POST - rename
 Rename a container
 
 Rename the container id to a new\_name
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[name],
-	[true],
-	[New name for the container],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
+
+
+
+
+===== query: name (required)
+
+New name for the container
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 409
+conflict, name already assigned
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -536,32 +1099,65 @@ Rename the container id to a new\_name
 
 == /containers/{id}/resize
 
-=== post - resizeContainer
+=== POST - resizeContainer
 Resize a container TTY
 
 Resize the TTY for container with id. The unit is number of characters. You must restart the container for the resize to take effect.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[h],
-	[false],
-	[Height of the tty session],
-	[],
+The container id or name
 
-	[w],
-	[false],
-	[Width of the tty session],
-	[],
+- type:  string
+- style: simple
 
-)
+
+
+
+===== query: h 
+
+Height of the tty session
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: w 
+
+Width of the tty session
+
+- type:  integer
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+cannot resize container
+
 
 
 
@@ -569,27 +1165,55 @@ Resize the TTY for container with id. The unit is number of characters. You must
 
 == /containers/{id}/restart
 
-=== post - restart
+=== POST - restart
 Restart a container
 
 Restart the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[t],
-	[false],
-	[number of seconds to wait before killing the container],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
+
+
+
+
+===== query: t 
+
+number of seconds to wait before killing the container
+
+- type:  integer
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -597,22 +1221,51 @@ Restart the container id
 
 == /containers/{id}/start
 
-=== post - startContainer
+=== POST - startContainer
 Start a container
 
 Start the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-)
+The container id or name
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 304
+container already started
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -620,27 +1273,61 @@ Start the container id
 
 == /containers/{id}/stats
 
-=== get - stats
+=== GET - stats
 Get container stats based on resource usage
 
 This endpoint returns a live stream of a container’s resource usage statistics.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[stream],
-	[false],
-	[Stream stats],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
+
+
+
+
+===== query: stream 
+
+Stream stats
+
+- type:  boolean
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: object
+
+- text/plain: object
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -648,27 +1335,61 @@ This endpoint returns a live stream of a container’s resource usage statistics
 
 == /containers/{id}/stop
 
-=== post - stop
+=== POST - stop
 Stop a container
 
 Stop the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[t],
-	[false],
-	[number of seconds to wait before killing the container],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
+
+
+
+
+===== query: t 
+
+number of seconds to wait before killing the container
+
+- type:  integer
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 304
+container already stopped
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -676,27 +1397,61 @@ Stop the container id
 
 == /containers/{id}/top
 
-=== get - listProcesses
+=== GET - listProcesses
 List processes running inside a container
 
 List processes running inside the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-	[ps\_args],
-	[false],
-	[ps arguments to use (e.g., aux)],
-	[],
+The container id or name
 
-)
+- type:  string
+- style: simple
+
+
+
+
+===== query: ps\_args 
+
+ps arguments to use (e.g., aux)
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: #link(label("ContainerTop"), "ContainerTop")
+
+- text/plain: #link(label("ContainerTop"), "ContainerTop")
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -704,22 +1459,45 @@ List processes running inside the container id
 
 == /containers/{id}/unpause
 
-=== post - unpause
+=== POST - unpause
 Unpause a container
 
 Unpause the container id
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-)
+The container id or name
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 204
+no error
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -727,22 +1505,52 @@ Unpause the container id
 
 == /containers/{id}/wait
 
-=== post - wait
+=== POST - wait
 Wait a container
 
 Block until container id stops, then returns the exit code
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[The container id or name],
-	[],
+===== path: id (required)
 
-)
+The container id or name
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: #link(label("ContainerWait"), "ContainerWait")
+
+- text/plain: #link(label("ContainerWait"), "ContainerWait")
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+server error
+
+
 
 
 
@@ -754,44 +1562,67 @@ Block until container id stops, then returns the exit code
 
 == /containers/{id}/exec
 
-=== post - createExec
+=== POST - createExec
 Exec Create
 
 Sets up an exec instance in a running container id
 
+
+
+- application/json: #link(label("ExecConfig"), "ExecConfig")
+
+- text/plain: #link(label("ExecConfig"), "ExecConfig")
+
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[Content-Type],
-	[true],
-	[Content Type Header],
-	[],
+===== header: Content-Type (required)
 
-	[id],
-	[true],
-	[Container name or id],
-	[],
+Content Type Header
 
-)
+- type:  string
+- style: simple
 
 
-==== Request body
-
-Exec configuration
 
 
-#table(
-	columns: 2,
+===== path: id (required)
 
-	[application/json],
-	[{"\$ref":"\#/components/schemas/ExecConfig"}],
+Container name or id
 
-	[text/plain],
-	[{"\$ref":"\#/components/schemas/ExecConfig"}],
+- type:  string
+- style: simple
 
-)
+
+
+
+
+
+==== Response
+
+==== 201
+no error
+
+
+
+- application/json: #link(label("ExecCreateResult"), "ExecCreateResult")
+
+- text/plain: #link(label("ExecCreateResult"), "ExecCreateResult")
+
+
+
+
+==== 404
+no such container
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -799,22 +1630,51 @@ Exec configuration
 
 == /exec/{id}/json
 
-=== post - findExec
+=== POST - findExec
 Exec Inspect
 
 Return low-level information about the exec command id.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[Exec instance id],
-	[],
+===== path: id (required)
 
-)
+Exec instance id
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: #link(label("ExecCommand"), "ExecCommand")
+
+- text/plain: #link(label("ExecCommand"), "ExecCommand")
+
+
+
+
+==== 404
+No such exec instance
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -822,32 +1682,65 @@ Return low-level information about the exec command id.
 
 == /exec/{id}/resize
 
-=== post - resizeTty
+=== POST - resizeTty
 Exec Resize
 
 Resize the tty session used by the exec command id.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[Exec instance id],
-	[],
+===== path: id (required)
 
-	[h],
-	[false],
-	[Height of the tty session],
-	[],
+Exec instance id
 
-	[w],
-	[false],
-	[Width of the tty session],
-	[],
+- type:  string
+- style: simple
 
-)
+
+
+
+===== query: h 
+
+Height of the tty session
+
+- type:  integer
+- style: form
+- format: int64
+
+
+
+===== query: w 
+
+Width of the tty session
+
+- type:  integer
+- style: form
+- format: int64
+
+
+
+
+
+==== Response
+
+==== 201
+No error
+
+
+
+
+==== 404
+No such exec instance
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -855,44 +1748,68 @@ Resize the tty session used by the exec command id.
 
 == /exec/{id}/start
 
-=== post - startExec
+=== POST - startExec
 Exec Start
 
 Starts a previously set up exec instance id. If detach is true, this API returns after starting the exec command. Otherwise, this API sets up an interactive session with the exec command.
 
+
+
+- application/json: #link(label("ExecStartConfig"), "ExecStartConfig")
+
+- text/plain: #link(label("ExecStartConfig"), "ExecStartConfig")
+
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[Content-Type],
-	[true],
-	[Content Type Header],
-	[],
+===== header: Content-Type (required)
 
-	[id],
-	[true],
-	[Exec instance id],
-	[],
+Content Type Header
 
-)
+- type:  string
+- style: simple
 
 
-==== Request body
-
-Exec configuration
 
 
-#table(
-	columns: 2,
+===== path: id (required)
 
-	[application/json],
-	[{"\$ref":"\#/components/schemas/ExecStartConfig"}],
+Exec instance id
 
-	[text/plain],
-	[{"\$ref":"\#/components/schemas/ExecStartConfig"}],
+- type:  string
+- style: simple
 
-)
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+
+==== 404
+No such exec instance
+
+
+
+
+==== 409
+Container is stopped or paused
+
+
+
+
+==== 500
+Server error
+
+
 
 
 
@@ -904,119 +1821,205 @@ Exec configuration
 
 == /build
 
-=== post - build
+=== POST - build
 Build an image from Dockerfile via stdin
 
 Build an image from Dockerfile via stdin
+
+
+
+- application/json: 
+
+- text/plain: 
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[dockerfile],
-	[false],
-	[Path within the build context to the Dockerfile. This is ignored if remote is specified and points to an individual filename.],
-	[],
+===== query: dockerfile 
 
-	[t],
-	[false],
-	[A repository name (and optionally a tag) to apply to the resulting image in case of success.],
-	[],
+Path within the build context to the Dockerfile. This is ignored if remote is specified and points to an individual filename.
 
-	[remote],
-	[false],
-	[A Git repository URI or HTTP/HTTPS URI build source. If the URI specifies a filename, the file’s contents are placed into a file called Dockerfile.],
-	[],
-
-	[q],
-	[false],
-	[Suppress verbose build output.],
-	[],
-
-	[nocache],
-	[false],
-	[Do not use the cache when building the image.],
-	[],
-
-	[pull],
-	[false],
-	[Attempt to pull the image even if an older image exists locally],
-	[],
-
-	[rm],
-	[false],
-	[Remove intermediate containers after a successful build (default behavior).],
-	[],
-
-	[forcerm],
-	[false],
-	[always remove intermediate containers (includes rm)],
-	[],
-
-	[memory],
-	[false],
-	[Set memory limit for build.],
-	[],
-
-	[memswap],
-	[false],
-	[Total memory (memory + swap), -1 to disable swap.],
-	[],
-
-	[cpushares],
-	[false],
-	[CPU shares (relative weight).],
-	[],
-
-	[cpusetcpus],
-	[false],
-	[CPUs in which to allow execution (e.g., 0-3, 0,1).],
-	[],
-
-	[cpuperiod],
-	[false],
-	[The length of a CPU period in microseconds.],
-	[],
-
-	[cpuquota],
-	[false],
-	[Microseconds of CPU time that the container can get in a CPU period.],
-	[],
-
-	[buildargs],
-	[false],
-	[Total memory (memory + swap), -1 to disable swap.],
-	[],
-
-	[Content-type],
-	[false],
-	[ Set to 'application/tar'.],
-	[],
-
-	[X-Registry-Config],
-	[false],
-	[A base64-url-safe-encoded Registry Auth Config JSON object],
-	[],
-
-)
+- type:  string
+- style: form
 
 
-==== Request body
-
-The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.
 
 
-#table(
-	columns: 2,
+===== query: t 
 
-	[application/json],
-	[{"type":"string"}],
+A repository name (and optionally a tag) to apply to the resulting image in case of success.
 
-	[text/plain],
-	[{"type":"string"}],
+- type:  string
+- style: form
 
-)
+
+
+
+===== query: remote 
+
+A Git repository URI or HTTP/HTTPS URI build source. If the URI specifies a filename, the file’s contents are placed into a file called Dockerfile.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: q 
+
+Suppress verbose build output.
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: nocache 
+
+Do not use the cache when building the image.
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: pull 
+
+Attempt to pull the image even if an older image exists locally
+
+- type:  string
+- style: form
+
+
+
+
+===== query: rm 
+
+Remove intermediate containers after a successful build (default behavior).
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: forcerm 
+
+always remove intermediate containers (includes rm)
+
+- type:  boolean
+- style: form
+
+
+
+
+===== query: memory 
+
+Set memory limit for build.
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: memswap 
+
+Total memory (memory + swap), -1 to disable swap.
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: cpushares 
+
+CPU shares (relative weight).
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: cpusetcpus 
+
+CPUs in which to allow execution (e.g., 0-3, 0,1).
+
+- type:  string
+- style: form
+
+
+
+
+===== query: cpuperiod 
+
+The length of a CPU period in microseconds.
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: cpuquota 
+
+Microseconds of CPU time that the container can get in a CPU period.
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: buildargs 
+
+Total memory (memory + swap), -1 to disable swap.
+
+- type:  integer
+- style: form
+
+
+
+
+===== header: Content-type 
+
+ Set to 'application/tar'.
+
+- type:  string
+- style: simple
+
+
+
+
+===== header: X-Registry-Config 
+
+A base64-url-safe-encoded Registry Auth Config JSON object
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1024,69 +2027,111 @@ The input stream must be a tar archive compressed with one of the following algo
 
 == /commit
 
-=== post - commit
+=== POST - commit
 Create a new image from a container’s changes
 
 Create a new image from a container’s changes
+
+
+
+- application/json: #link(label("ContainerConfig"), "ContainerConfig")
+
+- text/plain: #link(label("ContainerConfig"), "ContainerConfig")
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[container],
-	[false],
-	[Container id or name to commit],
-	[],
+===== query: container 
 
-	[repo],
-	[false],
-	[Repository name for the created image],
-	[],
+Container id or name to commit
 
-	[tag],
-	[false],
-	[Tag name for the create image],
-	[],
-
-	[comment],
-	[false],
-	[Commit message],
-	[],
-
-	[author],
-	[false],
-	[author (e.g., “John Hannibal Smith “)],
-	[],
-
-	[pause],
-	[false],
-	[1/True/true or 0/False/false, whether to pause the container before committing],
-	[],
-
-	[changes],
-	[false],
-	[Dockerfile instructions to apply while committing],
-	[],
-
-)
+- type:  string
+- style: form
 
 
-==== Request body
-
-The container configuration
 
 
-#table(
-	columns: 2,
+===== query: repo 
 
-	[application/json],
-	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+Repository name for the created image
 
-	[text/plain],
-	[{"\$ref":"\#/components/schemas/ContainerConfig"}],
+- type:  string
+- style: form
 
-)
+
+
+
+===== query: tag 
+
+Tag name for the create image
+
+- type:  string
+- style: form
+
+
+
+
+===== query: comment 
+
+Commit message
+
+- type:  string
+- style: form
+
+
+
+
+===== query: author 
+
+author (e.g., “John Hannibal Smith “)
+
+- type:  string
+- style: form
+
+
+
+
+===== query: pause 
+
+1/True/true or 0/False/false, whether to pause the container before committing
+
+- type:  string
+- style: form
+
+
+
+
+===== query: changes 
+
+Dockerfile instructions to apply while committing
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 201
+no error
+
+
+
+- application/json: #link(label("CommitResult"), "CommitResult")
+
+- text/plain: #link(label("CommitResult"), "CommitResult")
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1094,56 +2139,83 @@ The container configuration
 
 == /images/create
 
-=== post - createImage
+=== POST - createImage
 Create an image
 
 Create an image either by pulling it from the registry or by importing it
 
+
+
+- application/octet-stream: 
+
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[fromImage],
-	[false],
-	[Name of the image to pull. The name may include a tag or digest. This parameter may only be used when pulling an image.],
-	[],
+===== query: fromImage 
 
-	[fromSrc],
-	[false],
-	[Source to import. The value may be a URL from which the image can be retrieved or - to read the image from the request body. This parameter may only be used when importing an image.],
-	[],
+Name of the image to pull. The name may include a tag or digest. This parameter may only be used when pulling an image.
 
-	[repo],
-	[false],
-	[Repository name given to an image when it is imported. The repo may include a tag. This parameter may only be used when importing an image.],
-	[],
-
-	[tag],
-	[false],
-	[Tag or digest.],
-	[],
-
-	[X-Registry-Config],
-	[false],
-	[A base64-encoded AuthConfig object],
-	[],
-
-)
+- type:  string
+- style: form
 
 
-==== Request body
-
-Image content if the value - has been specified in fromSrc query parameter
 
 
-#table(
-	columns: 2,
+===== query: fromSrc 
 
-	[application/octet-stream],
-	[{"format":"binary","type":"string"}],
+Source to import. The value may be a URL from which the image can be retrieved or - to read the image from the request body. This parameter may only be used when importing an image.
 
-)
+- type:  string
+- style: form
+
+
+
+
+===== query: repo 
+
+Repository name given to an image when it is imported. The repo may include a tag. This parameter may only be used when importing an image.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: tag 
+
+Tag or digest.
+
+- type:  string
+- style: form
+
+
+
+
+===== header: X-Registry-Config 
+
+A base64-encoded AuthConfig object
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1151,22 +2223,45 @@ Image content if the value - has been specified in fromSrc query parameter
 
 == /images/get
 
-=== get - saveAll
+=== GET - saveAll
 Get a tarball containing all images.
 
 Get a tarball containing all images and metadata for one or more repositories.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[names],
-	[false],
-	[Image names to filter],
-	[],
+===== query: names 
 
-)
+Image names to filter
+
+- type:  array
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: string
+
+- text/plain: string
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1174,37 +2269,75 @@ Get a tarball containing all images and metadata for one or more repositories.
 
 == /images/json
 
-=== get - findAllImages
+=== GET - findAllImages
 List Images
 
 List Images
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[all],
-	[false],
-	[Show all images. Only images from a final layer (no children) are shown by default.],
-	[],
+===== query: all 
 
-	[filters],
-	[false],
-	[A JSON encoded value of the filters (a map[string][]string) to process on the containers list],
-	[],
+Show all images. Only images from a final layer (no children) are shown by default.
 
-	[filter],
-	[false],
-	[Only return images with the specified name.],
-	[],
+- type:  boolean
+- style: form
 
-	[digests],
-	[false],
-	[Show digest information, default to false],
-	[],
 
-)
+
+
+===== query: filters 
+
+A JSON encoded value of the filters (a map[string][]string) to process on the containers list
+
+- type:  string
+- style: form
+
+
+
+
+===== query: filter 
+
+Only return images with the specified name.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: digests 
+
+Show digest information, default to false
+
+- type:  boolean
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: array[#link(label("ImageItem"), "ImageItem")]
+
+- text/plain: array[#link(label("ImageItem"), "ImageItem")]
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1212,34 +2345,32 @@ List Images
 
 == /images/load
 
-=== post - load
+=== POST - load
 Load a tarball with a set of images and tags into docker.
 
 Load a set of images and tags into a Docker repository. See the image tarball format for more details.
 
-==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
-
-)
 
 
-==== Request body
+- application/json: 
 
-Tar archive containing images
+- text/plain: 
 
 
-#table(
-	columns: 2,
 
-	[application/json],
-	[{"type":"string"}],
 
-	[text/plain],
-	[{"type":"string"}],
 
-)
+==== Response
+
+==== 200
+no error
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1247,22 +2378,45 @@ Tar archive containing images
 
 == /images/search
 
-=== get - search
+=== GET - search
 Search images
 
 Search for an image on Docker Hub.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[term],
-	[false],
-	[Term to search],
-	[],
+===== query: term 
 
-)
+Term to search
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: array[#link(label("ImageSearchResult"), "ImageSearchResult")]
+
+- text/plain: array[#link(label("ImageSearchResult"), "ImageSearchResult")]
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1270,32 +2424,71 @@ Search for an image on Docker Hub.
 
 == /images/{name}
 
-=== delete - removeImage
+=== DELETE - removeImage
 Remove an image
 
 Remove the image name from the filesystem
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Image name or id],
-	[],
+===== path: name (required)
 
-	[force],
-	[false],
-	[1/True/true or 0/False/false, default false],
-	[],
+Image name or id
 
-	[noprune],
-	[false],
-	[1/True/true or 0/False/false, default false.],
-	[],
+- type:  string
+- style: simple
 
-)
+
+
+
+===== query: force 
+
+1/True/true or 0/False/false, default false
+
+- type:  string
+- style: form
+
+
+
+
+===== query: noprune 
+
+1/True/true or 0/False/false, default false.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+
+==== 404
+No such image
+
+
+
+
+==== 409
+Conflict
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1303,22 +2496,45 @@ Remove the image name from the filesystem
 
 == /images/{name}/get
 
-=== get - save
+=== GET - save
 Get a tarball containing all images in a repository
 
 Get a tarball containing all images and metadata for the repository specified by name.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Image name or id],
-	[],
+===== path: name (required)
 
-)
+Image name or id
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: string
+
+- text/plain: string
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1326,22 +2542,51 @@ Get a tarball containing all images and metadata for the repository specified by
 
 == /images/{name}/history
 
-=== get - history
+=== GET - history
 Get the history of an image
 
 Return the history of the image name
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Image name or id],
-	[],
+===== path: name (required)
 
-)
+Image name or id
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: array[#link(label("ImageHistoryItem"), "ImageHistoryItem")]
+
+- text/plain: array[#link(label("ImageHistoryItem"), "ImageHistoryItem")]
+
+
+
+
+==== 404
+No such image
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1349,22 +2594,51 @@ Return the history of the image name
 
 == /images/{name}/json
 
-=== get - findImage
+=== GET - findImage
 Inspect an image
 
 Return low-level information on the image name
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Image name or id],
-	[],
+===== path: name (required)
 
-)
+Image name or id
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: #link(label("Image"), "Image")
+
+- text/plain: #link(label("Image"), "Image")
+
+
+
+
+==== 404
+No such image
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1372,32 +2646,65 @@ Return low-level information on the image name
 
 == /images/{name}/push
 
-=== post - push
+=== POST - push
 Push an image to the registry
 
 Push the image name on the registry
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Image name or id],
-	[],
+===== path: name (required)
 
-	[tag],
-	[false],
-	[The tag to associate with the image on the registry.],
-	[],
+Image name or id
 
-	[X-Registry-Auth],
-	[true],
-	[A base64-encoded AuthConfig object],
-	[],
+- type:  string
+- style: simple
 
-)
+
+
+
+===== query: tag 
+
+The tag to associate with the image on the registry.
+
+- type:  string
+- style: form
+
+
+
+
+===== header: X-Registry-Auth (required)
+
+A base64-encoded AuthConfig object
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+
+==== 404
+No such image
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1405,37 +2712,88 @@ Push the image name on the registry
 
 == /images/{name}/tag
 
-=== post - tag
+=== POST - tag
 Tag an image into a repository
 
 Tag the image name into a repository
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Image name or id],
-	[],
+===== path: name (required)
 
-	[repo],
-	[false],
-	[The repository to tag in.],
-	[],
+Image name or id
 
-	[force],
-	[false],
-	[1/True/true or 0/False/false, default false],
-	[],
+- type:  string
+- style: simple
 
-	[tag],
-	[false],
-	[The new tag name.],
-	[],
 
-)
+
+
+===== query: repo 
+
+The repository to tag in.
+
+- type:  string
+- style: form
+
+
+
+
+===== query: force 
+
+1/True/true or 0/False/false, default false
+
+- type:  string
+- style: form
+
+
+
+
+===== query: tag 
+
+The new tag name.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 201
+No error
+
+
+
+
+==== 400
+Bad parameter
+
+
+
+
+==== 404
+No such image
+
+
+
+
+==== 409
+Conflict
+
+
+
+
+==== 500
+Server error
+
+
 
 
 
@@ -1447,17 +2805,30 @@ Tag the image name into a repository
 
 == /\_ping
 
-=== get - ping
+=== GET - ping
 Ping the docker server
 
 Ping the docker server
 
-==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-)
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- text/plain: string
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1465,34 +2836,38 @@ Ping the docker server
 
 == /auth
 
-=== post - checkAuthentication
+=== POST - checkAuthentication
 Check auth configuration
 
 Check auth configuration.
 
-==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
-
-)
 
 
-==== Request body
+- application/json: #link(label("AuthConfig"), "AuthConfig")
 
-Authentication to check
+- text/plain: #link(label("AuthConfig"), "AuthConfig")
 
 
-#table(
-	columns: 2,
 
-	[application/json],
-	[{"\$ref":"\#/components/schemas/AuthConfig"}],
 
-	[text/plain],
-	[{"\$ref":"\#/components/schemas/AuthConfig"}],
 
-)
+==== Response
+
+==== 200
+No error
+
+
+
+
+==== 204
+No error
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1500,32 +2875,59 @@ Authentication to check
 
 == /events
 
-=== get - getEvents
+=== GET - getEvents
 Monitor Docker’s events
 
 Get container events from docker, either in real time via streaming, or via polling (using since).
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[since],
-	[false],
-	[Timestamp used for polling],
-	[],
+===== query: since 
 
-	[until],
-	[false],
-	[Timestamp used for polling],
-	[],
+Timestamp used for polling
 
-	[filters],
-	[false],
-	[A json encoded value of the filters (a map[string][]string) to process on the event list.],
-	[],
+- type:  integer
+- style: form
 
-)
+
+
+
+===== query: until 
+
+Timestamp used for polling
+
+- type:  integer
+- style: form
+
+
+
+
+===== query: filters 
+
+A json encoded value of the filters (a map[string][]string) to process on the event list.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -1533,17 +2935,32 @@ Get container events from docker, either in real time via streaming, or via poll
 
 == /info
 
-=== get - getSystemInformation
+=== GET - getSystemInformation
 Display system-wide information
 
 Display system-wide information.
 
-==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-)
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: #link(label("SystemInformation"), "SystemInformation")
+
+- text/plain: #link(label("SystemInformation"), "SystemInformation")
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1551,17 +2968,33 @@ Display system-wide information.
 
 == /version
 
-=== get - getVersion
+=== GET - getVersion
 Show the docker version information
 
 Show the docker version information
 
-==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-)
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: #link(label("Version"), "Version")
+
+- text/plain: #link(label("Version"), "Version")
+
+
+
+
+==== 500
+server error
+
+
 
 
 
@@ -1573,22 +3006,45 @@ Show the docker version information
 
 == /networks
 
-=== get - findAllNetworks
+=== GET - findAllNetworks
 List networks
 
 List networks.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[filters],
-	[false],
-	[JSON encoded value of the filters (a map[string][]string) to process on the networks list.],
-	[],
+===== query: filters 
 
-)
+JSON encoded value of the filters (a map[string][]string) to process on the networks list.
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: array[#link(label("Network"), "Network")]
+
+- text/plain: array[#link(label("Network"), "Network")]
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1596,34 +3052,44 @@ List networks.
 
 == /networks/create
 
-=== post - createNetwork
+=== POST - createNetwork
 Create network
 
 Create network.
 
-==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
-
-)
 
 
-==== Request body
+- application/json: #link(label("NetworkCreateConfig"), "NetworkCreateConfig")
 
-Network configuration
+- text/plain: #link(label("NetworkCreateConfig"), "NetworkCreateConfig")
 
 
-#table(
-	columns: 2,
 
-	[application/json],
-	[{"\$ref":"\#/components/schemas/NetworkCreateConfig"}],
 
-	[text/plain],
-	[{"\$ref":"\#/components/schemas/NetworkCreateConfig"}],
 
-)
+==== Response
+
+==== 201
+No error
+
+
+
+- application/json: #link(label("NetworkCreateResult"), "NetworkCreateResult")
+
+- text/plain: #link(label("NetworkCreateResult"), "NetworkCreateResult")
+
+
+
+
+==== 404
+Driver not found
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1631,42 +3097,94 @@ Network configuration
 
 == /networks/{id}
 
-=== delete - removeNetwork
+=== DELETE - removeNetwork
 Remove a network
 
 Remove a network
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[Network id or name],
-	[],
+===== path: id (required)
 
-)
+Network id or name
+
+- type:  string
+- style: simple
 
 
 
 
-=== get - findNetwork
+
+
+==== Response
+
+==== 204
+No error
+
+
+
+
+==== 404
+Network not found
+
+
+
+
+==== 500
+Server error
+
+
+
+
+
+=== GET - findNetwork
 Inspect network
 
 Inspect network.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[Network id or name],
-	[],
+===== path: id (required)
 
-)
+Network id or name
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: #link(label("Network"), "Network")
+
+- text/plain: #link(label("Network"), "Network")
+
+
+
+
+==== 404
+Network not found
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1674,54 +3192,93 @@ Inspect network.
 
 == /networks/{id}/connect
 
-=== post - connect
+=== POST - connect
 Connect a container to a network
 
 Connect a container to a network.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[Network id or name],
-	[],
+===== path: id (required)
 
-)
+Network id or name
+
+- type:  string
+- style: simple
 
 
-==== Request body
 
-REF: \#/components/requestBodies/ContainerConnect
+
+
+
+==== Response
+
+==== 201
+No error
+
+
+
+
+==== 404
+Network or container not found
+
+
+
+
+==== 500
+Server error
+
+
 
 
 
 
 == /networks/{id}/disconnect
 
-=== post - disconnect
+=== POST - disconnect
 Disconnect a container to a network
 
 Disconnect a container to a network.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[id],
-	[true],
-	[Network id or name],
-	[],
+===== path: id (required)
 
-)
+Network id or name
+
+- type:  string
+- style: simple
 
 
-==== Request body
 
-REF: \#/components/requestBodies/ContainerConnect
+
+
+
+==== Response
+
+==== 201
+No error
+
+
+
+
+==== 404
+Network or container not found
+
+
+
+
+==== 500
+Server error
+
+
+
 
 
 
@@ -1732,22 +3289,45 @@ REF: \#/components/requestBodies/ContainerConnect
 
 == /volumes
 
-=== get - findAllVolumes
+=== GET - findAllVolumes
 List volumes
 
 List volumes.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[filters],
-	[false],
-	[JSON encoded value of the filters (a map[string][]string) to process on the volumes list],
-	[],
+===== query: filters 
 
-)
+JSON encoded value of the filters (a map[string][]string) to process on the volumes list
+
+- type:  string
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: #link(label("VolumeList"), "VolumeList")
+
+- text/plain: #link(label("VolumeList"), "VolumeList")
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1755,34 +3335,38 @@ List volumes.
 
 == /volumes/create
 
-=== post - createVolume
+=== POST - createVolume
 Create a volume
 
 Create a volume.
 
-==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
-
-)
 
 
-==== Request body
+- application/json: #link(label("VolumeConfig"), "VolumeConfig")
 
-Volume configuration
+- text/plain: #link(label("VolumeConfig"), "VolumeConfig")
 
 
-#table(
-	columns: 2,
 
-	[application/json],
-	[{"\$ref":"\#/components/schemas/VolumeConfig"}],
 
-	[text/plain],
-	[{"\$ref":"\#/components/schemas/VolumeConfig"}],
 
-)
+==== Response
+
+==== 201
+No error
+
+
+
+- application/json: #link(label("Volume"), "Volume")
+
+- text/plain: #link(label("Volume"), "Volume")
+
+
+
+
+==== 500
+Server error
+
 
 
 
@@ -1790,39 +3374,2744 @@ Volume configuration
 
 == /volumes/{name}
 
-=== delete - removeVolume
+=== DELETE - removeVolume
 Remove a volume
 
 Instruct the driver to remove the volume.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Volume name or id],
-	[],
+===== path: name (required)
 
-)
+Volume name or id
+
+- type:  string
+- style: simple
 
 
 
 
-=== get - findVolume
+
+
+==== Response
+
+==== 204
+No error
+
+
+
+
+==== 404
+No such volume or volume driver
+
+
+
+
+==== 409
+Volume is in use and cannot be removed
+
+
+
+
+==== 500
+Server error
+
+
+
+
+
+=== GET - findVolume
 Inspect a volume
 
 Inspect a volume.
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[name],
-	[true],
-	[Volume name or id],
-	[],
+===== path: name (required)
 
-)
+Volume name or id
+
+- type:  string
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+No error
+
+
+
+- application/json: #link(label("Volume"), "Volume")
+
+- text/plain: #link(label("Volume"), "Volume")
+
+
+
+
+==== 404
+No such volume
+
+
+
+
+==== 500
+Server error
+
+
+
+
+
+
+
+
+
+#pagebreak()
+#show: appendix
+
+= Schemas
+
+
+== AuthConfig<AuthConfig>
+
+
+
+
+
+
+
+
+=== `email`#h(1fr)string
+
+
+
+
+
+
+=== `password`#h(1fr)string
+
+
+
+
+
+
+=== `serveraddress`#h(1fr)string
+
+
+
+
+
+
+=== `username`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== BuildInfo<BuildInfo>
+
+
+
+
+
+
+
+
+=== `error`#h(1fr)string
+
+
+
+
+
+
+=== `errorDetail`#h(1fr)#link(label("ErrorDetail"), "ErrorDetail")
+
+
+
+
+
+
+=== `id`#h(1fr)string
+
+
+
+
+
+
+=== `progress`#h(1fr)string
+
+
+
+
+
+
+=== `progressDetail`#h(1fr)#link(label("ProgressDetail"), "ProgressDetail")
+
+
+
+
+
+
+=== `status`#h(1fr)string
+
+
+
+
+
+
+=== `stream`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== CommitResult<CommitResult>
+
+
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Container<Container>
+
+
+
+
+
+
+
+
+=== `AppArmorProfile`#h(1fr)string
+
+
+
+
+
+
+=== `Args`#h(1fr)array[string]
+
+
+
+
+
+
+=== `Config`#h(1fr)#link(label("ContainerConfig"), "ContainerConfig")
+
+
+
+
+
+
+=== `Created`#h(1fr)string
+
+
+
+
+
+
+=== `Driver`#h(1fr)string
+
+
+
+
+
+
+=== `ExecDriver`#h(1fr)string
+
+
+
+
+
+
+=== `ExecIDs`#h(1fr)string
+
+
+
+
+
+
+=== `HostConfig`#h(1fr)#link(label("HostConfig"), "HostConfig")
+
+
+
+
+
+
+=== `HostnamePath`#h(1fr)string
+
+
+
+
+
+
+=== `HostsPath`#h(1fr)string
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Image`#h(1fr)string
+
+
+
+
+
+
+=== `LogPath`#h(1fr)string
+
+
+
+
+
+
+=== `MountLabel`#h(1fr)string
+
+
+
+
+
+
+=== `Mounts`#h(1fr)array[#link(label("mount"), "mount")]
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+=== `NetworkSettings`#h(1fr)#link(label("NetworkConfig"), "NetworkConfig")
+
+
+
+
+
+
+=== `Path`#h(1fr)string
+
+
+
+
+
+
+=== `ProcessLabel`#h(1fr)string
+
+
+
+
+
+
+=== `ResolvConfPath`#h(1fr)string
+
+
+
+
+
+
+=== `RestartCount`#h(1fr)integer
+
+
+
+
+
+
+=== `State`#h(1fr)#link(label("ContainerState"), "ContainerState")
+
+
+
+
+
+
+
+
+
+
+
+== ContainerChange<ContainerChange>
+
+
+
+
+
+
+
+
+=== `Kind`#h(1fr)integer
+
+
+
+
+
+
+=== `Path`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== ContainerConfig<ContainerConfig>
+
+
+
+
+
+
+
+
+=== `AttachStderr`#h(1fr)boolean
+
+
+
+
+
+
+=== `AttachStdin`#h(1fr)boolean
+
+
+
+
+
+
+=== `AttachStdout`#h(1fr)boolean
+
+
+
+
+
+
+=== `Cmd`#h(1fr)
+
+
+
+
+
+
+=== `Command`#h(1fr)string
+
+
+
+
+
+
+=== `Created`#h(1fr)integer
+
+
+
+
+
+
+=== `Domainname`#h(1fr)integer
+
+
+
+
+
+
+=== `Entrypoint`#h(1fr)
+
+
+
+
+
+
+=== `Env`#h(1fr)array[string]
+
+
+
+
+
+
+=== `ExposedPorts`#h(1fr)object
+
+
+
+- additional properties: 
+
+
+=== `HostConfig`#h(1fr)#link(label("HostConfig"), "HostConfig")
+
+
+
+
+
+
+=== `Hostname`#h(1fr)integer
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Image`#h(1fr)string
+
+
+
+
+
+
+=== `Labels`#h(1fr)object
+
+
+
+- additional properties: 
+
+
+=== `MacAddress`#h(1fr)string
+
+
+
+
+
+
+=== `Mounts`#h(1fr)array[#link(label("mount"), "mount")]
+
+
+
+
+
+
+=== `Names`#h(1fr)array[string]
+
+
+
+
+
+
+=== `NetworkDisabled`#h(1fr)boolean
+
+
+
+
+
+
+=== `OpenStdin`#h(1fr)boolean
+
+
+
+
+
+
+=== `Ports`#h(1fr)array[#link(label("port"), "port")]
+
+
+
+
+
+
+=== `SizeRootFs`#h(1fr)integer
+
+
+
+
+
+
+=== `SizeRw`#h(1fr)integer
+
+
+
+
+
+
+=== `Status`#h(1fr)string
+
+
+
+
+
+
+=== `StdinOnce`#h(1fr)boolean
+
+
+
+
+
+
+=== `Tty`#h(1fr)boolean
+
+
+
+
+
+
+=== `User`#h(1fr)integer
+
+
+
+
+
+
+=== `WorkingDir`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== ContainerConnect<ContainerConnect>
+
+
+
+
+
+
+
+
+=== `Container`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== ContainerCreateResult<ContainerCreateResult>
+
+
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Warnings`#h(1fr)array[string]
+
+
+
+
+
+
+
+
+
+
+
+== ContainerState<ContainerState>
+
+
+
+
+
+
+
+
+=== `Error`#h(1fr)string
+
+
+
+
+
+
+=== `ExitCode`#h(1fr)integer
+
+
+
+
+
+
+=== `FinishedAt`#h(1fr)string
+
+
+
+
+
+
+=== `OOMKilled`#h(1fr)boolean
+
+
+
+
+
+
+=== `Paused`#h(1fr)boolean
+
+
+
+
+
+
+=== `Pid`#h(1fr)integer
+
+
+
+
+
+
+=== `Restarting`#h(1fr)boolean
+
+
+
+
+
+
+=== `Running`#h(1fr)boolean
+
+
+
+
+
+
+=== `StartedAt`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== ContainerTop<ContainerTop>
+
+
+
+
+
+
+
+
+=== `Processes`#h(1fr)array[array]
+
+
+
+
+
+
+=== `Titles`#h(1fr)array[string]
+
+
+
+
+
+
+
+
+
+
+
+== ContainerWait<ContainerWait>
+
+
+
+
+
+
+
+
+=== `StatusCode`#h(1fr)integer
+
+
+
+
+
+
+
+
+
+
+
+== CreateImageInfo<CreateImageInfo>
+
+
+
+
+
+
+
+
+=== `error`#h(1fr)string
+
+
+
+
+
+
+=== `progress`#h(1fr)string
+
+
+
+
+
+
+=== `progressDetail`#h(1fr)#link(label("ProgressDetail"), "ProgressDetail")
+
+
+
+
+
+
+=== `status`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Device<Device>
+
+
+
+
+
+
+
+
+=== `CgroupPermissions`#h(1fr)string
+
+
+
+
+
+
+=== `PathInContainer`#h(1fr)string
+
+
+
+
+
+
+=== `PathOnHost`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== ErrorDetail<ErrorDetail>
+
+
+
+
+
+
+
+
+=== `code`#h(1fr)integer
+
+
+
+
+
+
+=== `message`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Event<Event>
+
+
+
+
+
+
+
+
+=== `from`#h(1fr)string
+
+
+
+
+
+
+=== `id`#h(1fr)string
+
+
+
+
+
+
+=== `status`#h(1fr)string
+
+
+
+
+
+
+=== `time`#h(1fr)integer
+
+
+
+
+
+
+=== `timeNano`#h(1fr)integer
+
+
+
+
+
+
+
+
+
+
+
+== ExecCommand<ExecCommand>
+
+
+
+
+
+
+
+
+=== `Container`#h(1fr)#link(label("Container"), "Container")
+
+
+
+
+
+
+=== `ExitCode`#h(1fr)integer
+
+
+
+
+
+
+=== `ID`#h(1fr)string
+
+
+
+
+
+
+=== `OpenStderr`#h(1fr)boolean
+
+
+
+
+
+
+=== `OpenStdin`#h(1fr)boolean
+
+
+
+
+
+
+=== `OpenStdout`#h(1fr)boolean
+
+
+
+
+
+
+=== `ProcessConfig`#h(1fr)#link(label("ProcessConfig"), "ProcessConfig")
+
+
+
+
+
+
+=== `Running`#h(1fr)boolean
+
+
+
+
+
+
+
+
+
+
+
+== ExecConfig<ExecConfig>
+
+
+
+
+
+
+
+
+=== `AttachStderr`#h(1fr)boolean
+
+
+
+
+
+
+=== `AttachStdin`#h(1fr)boolean
+
+
+
+
+
+
+=== `AttachStdout`#h(1fr)boolean
+
+
+
+
+
+
+=== `Cmd`#h(1fr)array[string]
+
+
+
+
+
+
+=== `Tty`#h(1fr)boolean
+
+
+
+
+
+
+
+
+
+
+
+== ExecCreateResult<ExecCreateResult>
+
+
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Warnings`#h(1fr)array[string]
+
+
+
+
+
+
+
+
+
+
+
+== ExecStartConfig<ExecStartConfig>
+
+
+
+
+
+
+
+
+=== `Detach`#h(1fr)boolean
+
+
+
+
+
+
+=== `Tty`#h(1fr)boolean
+
+
+
+
+
+
+
+
+
+
+
+== GraphDriver<GraphDriver>
+
+
+
+
+
+
+
+
+=== `Data`#h(1fr)object
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== HostConfig<HostConfig>
+
+
+
+
+
+
+
+
+=== `Binds`#h(1fr)array[string]
+
+
+
+
+
+
+=== `BlkioWeight`#h(1fr)integer
+
+
+
+
+
+
+=== `CapAdd`#h(1fr)array[string]
+
+
+
+
+
+
+=== `CapDrop`#h(1fr)array[string]
+
+
+
+
+
+
+=== `CgroupParent`#h(1fr)string
+
+
+
+
+
+
+=== `CpuPeriod`#h(1fr)integer
+
+
+
+
+
+
+=== `CpuShares`#h(1fr)integer
+
+
+
+
+
+
+=== `CpusetCpus`#h(1fr)string
+
+
+
+
+
+
+=== `CpusetMems`#h(1fr)string
+
+
+
+
+
+
+=== `Devices`#h(1fr)array[#link(label("Device"), "Device")]
+
+
+
+
+
+
+=== `Dns`#h(1fr)array[string]
+
+
+
+
+
+
+=== `DnsSearch`#h(1fr)array[string]
+
+
+
+
+
+
+=== `ExtraHosts`#h(1fr)array[string]
+
+
+
+
+
+
+=== `Links`#h(1fr)array[string]
+
+
+
+
+
+
+=== `LogConfig`#h(1fr)#link(label("LogConfig"), "LogConfig")
+
+
+
+
+
+
+=== `LxcConf`#h(1fr)object
+
+
+
+- additional properties: 
+
+
+=== `Memory`#h(1fr)integer
+
+
+
+
+
+
+=== `MemorySwap`#h(1fr)integer
+
+
+
+
+
+
+=== `MemorySwappiness`#h(1fr)integer
+
+
+
+
+
+
+=== `NetworkMode`#h(1fr)string
+
+
+
+
+
+
+=== `OomKillDisable`#h(1fr)boolean
+
+
+
+
+
+
+=== `PortBindings`#h(1fr)object
+
+
+
+- additional properties: #link(label("PortBinding"), "PortBinding")
+
+
+=== `Privileged`#h(1fr)boolean
+
+
+
+
+
+
+=== `PublishAllPorts`#h(1fr)boolean
+
+
+
+
+
+
+=== `ReadonlyRootfs`#h(1fr)boolean
+
+
+
+
+
+
+=== `RestartPolicy`#h(1fr)#link(label("RestartPolicy"), "RestartPolicy")
+
+
+
+
+
+
+=== `SecurityOpt`#h(1fr)array[string]
+
+
+
+
+
+
+=== `Ulimits`#h(1fr)array[#link(label("Ulimit"), "Ulimit")]
+
+
+
+
+
+
+=== `VolumesFrom`#h(1fr)array[string]
+
+
+
+
+
+
+
+
+
+
+
+== IPAM<IPAM>
+
+
+
+
+
+
+
+
+=== `Config`#h(1fr)array[object]
+
+
+
+
+
+
+=== `Driver`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Image<Image>
+
+
+
+
+
+
+
+
+=== `Architecture`#h(1fr)string
+
+
+
+
+
+
+=== `Author`#h(1fr)string
+
+
+
+
+
+
+=== `Comment`#h(1fr)string
+
+
+
+
+
+
+=== `Config`#h(1fr)#link(label("ContainerConfig"), "ContainerConfig")
+
+
+
+
+
+
+=== `Container`#h(1fr)string
+
+
+
+
+
+
+=== `ContainerConfig`#h(1fr)#link(label("ContainerConfig"), "ContainerConfig")
+
+
+
+
+
+
+=== `Created`#h(1fr)string
+
+
+
+
+
+
+=== `DockerVersion`#h(1fr)string
+
+
+
+
+
+
+=== `GraphDriver`#h(1fr)#link(label("GraphDriver"), "GraphDriver")
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Os`#h(1fr)string
+
+
+
+
+
+
+=== `Parent`#h(1fr)string
+
+
+
+
+
+
+=== `RepoDigests`#h(1fr)array[string]
+
+
+
+
+
+
+=== `RepoTags`#h(1fr)array[string]
+
+
+
+
+
+
+=== `Size`#h(1fr)integer
+
+
+
+
+
+
+=== `VirtualSize`#h(1fr)integer
+
+
+
+
+
+
+
+
+
+
+
+== ImageHistoryItem<ImageHistoryItem>
+
+
+
+
+
+
+
+
+=== `Comment`#h(1fr)string
+
+
+
+
+
+
+=== `Created`#h(1fr)integer
+
+
+
+
+
+
+=== `CreatedBy`#h(1fr)string
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Size`#h(1fr)integer
+
+
+
+
+
+
+=== `Tags`#h(1fr)array[string]
+
+
+
+
+
+
+
+
+
+
+
+== ImageItem<ImageItem>
+
+
+
+
+
+
+
+
+=== `Created`#h(1fr)integer
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Labels`#h(1fr)object
+
+
+
+- additional properties: 
+
+
+=== `ParentId`#h(1fr)string
+
+
+
+
+
+
+=== `RepoDigests`#h(1fr)array[string]
+
+
+
+
+
+
+=== `RepoTags`#h(1fr)array[string]
+
+
+
+
+
+
+=== `Size`#h(1fr)integer
+
+
+
+
+
+
+=== `VirtualSize`#h(1fr)integer
+
+
+
+
+
+
+
+
+
+
+
+== ImageSearchResult<ImageSearchResult>
+
+
+
+
+
+
+
+
+=== `description`#h(1fr)string
+
+
+
+
+
+
+=== `is_automated`#h(1fr)boolean
+
+
+
+
+
+
+=== `is_official`#h(1fr)boolean
+
+
+
+
+
+
+=== `name`#h(1fr)string
+
+
+
+
+
+
+=== `star_count`#h(1fr)integer
+
+
+
+
+
+
+
+
+
+
+
+== LogConfig<LogConfig>
+
+
+
+
+
+
+
+
+=== `Config`#h(1fr)object
+
+
+
+- additional properties: 
+
+
+=== `Type`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Network<Network>
+
+
+
+
+
+
+
+
+=== `Containers`#h(1fr)object
+
+
+
+- additional properties: #link(label("NetworkContainer"), "NetworkContainer")
+
+
+=== `Driver`#h(1fr)string
+
+
+
+
+
+
+=== `IPAM`#h(1fr)#link(label("IPAM"), "IPAM")
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+=== `Options`#h(1fr)object
+
+
+
+- additional properties: 
+
+
+=== `Scope`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== NetworkConfig<NetworkConfig>
+
+
+
+
+
+
+
+
+=== `Bridge`#h(1fr)string
+
+
+
+
+
+
+=== `Gateway`#h(1fr)string
+
+
+
+
+
+
+=== `IPAddress`#h(1fr)string
+
+
+
+
+
+
+=== `IPPrefixLen`#h(1fr)integer
+
+
+
+
+
+
+=== `MacAddress`#h(1fr)string
+
+
+
+
+
+
+=== `PortMapping`#h(1fr)string
+
+
+
+
+
+
+=== `Ports`#h(1fr)array[#link(label("port"), "port")]
+
+
+
+
+
+
+
+
+
+
+
+== NetworkContainer<NetworkContainer>
+
+
+
+
+
+
+
+
+=== `EndpointID`#h(1fr)string
+
+
+
+
+
+
+=== `IPv4Address`#h(1fr)string
+
+
+
+
+
+
+=== `IPv6Address`#h(1fr)string
+
+
+
+
+
+
+=== `MacAddress`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== NetworkCreateConfig<NetworkCreateConfig>
+
+
+
+
+
+
+
+
+=== `Driver`#h(1fr)string
+
+
+
+
+
+
+=== `IPAM`#h(1fr)#link(label("IPAM"), "IPAM")
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== NetworkCreateResult<NetworkCreateResult>
+
+
+
+
+
+
+
+
+=== `Id`#h(1fr)string
+
+
+
+
+
+
+=== `Warning`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== PortBinding<PortBinding>
+
+
+
+
+
+
+
+
+=== `HostPort`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== ProcessConfig<ProcessConfig>
+
+
+
+
+
+
+
+
+=== `arguments`#h(1fr)array[string]
+
+
+
+
+
+
+=== `entrypoint`#h(1fr)string
+
+
+
+
+
+
+=== `privileged`#h(1fr)boolean
+
+
+
+
+
+
+=== `tty`#h(1fr)boolean
+
+
+
+
+
+
+=== `user`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== ProgressDetail<ProgressDetail>
+
+
+
+
+
+
+
+
+=== `code`#h(1fr)integer
+
+
+
+
+
+
+=== `message`#h(1fr)integer
+
+
+
+
+
+
+
+
+
+
+
+== PushImageInfo<PushImageInfo>
+
+
+
+
+
+
+
+
+=== `error`#h(1fr)string
+
+
+
+
+
+
+=== `progress`#h(1fr)string
+
+
+
+
+
+
+=== `progressDetail`#h(1fr)#link(label("ProgressDetail"), "ProgressDetail")
+
+
+
+
+
+
+=== `status`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Registry<Registry>
+
+
+
+
+
+
+
+
+=== `Mirrors`#h(1fr)array[string]
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+=== `Official`#h(1fr)boolean
+
+
+
+
+
+
+=== `Secure`#h(1fr)boolean
+
+
+
+
+
+
+
+
+
+
+
+== RegistryConfig<RegistryConfig>
+
+
+
+
+
+
+
+
+=== `IndexConfigs`#h(1fr)object
+
+
+
+- additional properties: #link(label("Registry"), "Registry")
+
+
+=== `InsecureRegistryCIDRs`#h(1fr)array[string]
+
+
+
+
+
+
+
+
+
+
+
+== RestartPolicy<RestartPolicy>
+
+
+
+
+
+
+
+
+=== `MaximumRetryCount`#h(1fr)integer
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== SystemInformation<SystemInformation>
+
+
+
+
+
+
+
+
+=== `Containers`#h(1fr)integer
+
+
+
+
+
+
+=== `CpuCfsPeriod`#h(1fr)boolean
+
+
+
+
+
+
+=== `CpuCfsQuota`#h(1fr)boolean
+
+
+
+
+
+
+=== `Debug`#h(1fr)boolean
+
+
+
+
+
+
+=== `DiscoveryBackend`#h(1fr)string
+
+
+
+
+
+
+=== `DockerRootDir`#h(1fr)string
+
+
+
+
+
+
+=== `Driver`#h(1fr)string
+
+
+
+
+
+
+=== `DriverStatus`#h(1fr)array[array]
+
+
+
+
+
+
+=== `ExecutionDriver`#h(1fr)string
+
+
+
+
+
+
+=== `ExperimentalBuild`#h(1fr)boolean
+
+
+
+
+
+
+=== `HttpProxy`#h(1fr)string
+
+
+
+
+
+
+=== `HttpsProxy`#h(1fr)string
+
+
+
+
+
+
+=== `ID`#h(1fr)string
+
+
+
+
+
+
+=== `IPv4Forwarding`#h(1fr)boolean
+
+
+
+
+
+
+=== `Images`#h(1fr)integer
+
+
+
+
+
+
+=== `IndexServerAddress`#h(1fr)string
+
+
+
+
+
+
+=== `InitPath`#h(1fr)string
+
+
+
+
+
+
+=== `InitSha1`#h(1fr)string
+
+
+
+
+
+
+=== `KernelVersion`#h(1fr)string
+
+
+
+
+
+
+=== `Labels`#h(1fr)array[string]
+
+
+
+
+
+
+=== `MemTotal`#h(1fr)integer
+
+
+
+
+
+
+=== `MemoryLimit`#h(1fr)boolean
+
+
+
+
+
+
+=== `NCPU`#h(1fr)integer
+
+
+
+
+
+
+=== `NEventsListener`#h(1fr)integer
+
+
+
+
+
+
+=== `NFd`#h(1fr)integer
+
+
+
+
+
+
+=== `NGoroutines`#h(1fr)integer
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+=== `NoProxy`#h(1fr)string
+
+
+
+
+
+
+=== `OomKillDisable`#h(1fr)boolean
+
+
+
+
+
+
+=== `OperatingSystem`#h(1fr)string
+
+
+
+
+
+
+=== `RegistryConfig`#h(1fr)#link(label("RegistryConfig"), "RegistryConfig")
+
+
+
+
+
+
+=== `ServerVersion`#h(1fr)string
+
+
+
+
+
+
+=== `SwapLimit`#h(1fr)boolean
+
+
+
+
+
+
+=== `SystemTime`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Ulimit<Ulimit>
+
+
+
+
+
+
+
+
+=== `Hard`#h(1fr)integer
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+=== `Soft`#h(1fr)integer
+
+
+
+
+
+
+
+
+
+
+
+== Version<Version>
+
+
+
+
+
+
+
+
+=== `ApiVersion`#h(1fr)string
+
+
+
+
+
+
+=== `Arch`#h(1fr)string
+
+
+
+
+
+
+=== `Experimental`#h(1fr)boolean
+
+
+
+
+
+
+=== `GitCommit`#h(1fr)string
+
+
+
+
+
+
+=== `GoVersion`#h(1fr)string
+
+
+
+
+
+
+=== `KernelVersion`#h(1fr)string
+
+
+
+
+
+
+=== `Os`#h(1fr)string
+
+
+
+
+
+
+=== `Version`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== Volume<Volume>
+
+
+
+
+
+
+
+
+=== `Driver`#h(1fr)string
+
+
+
+
+
+
+=== `Mountpoint`#h(1fr)string
+
+
+
+
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== VolumeConfig<VolumeConfig>
+
+
+
+
+
+
+
+
+=== `Driver`#h(1fr)string
+
+
+
+
+
+
+=== `DriverOpts`#h(1fr)object
+
+
+
+- additional properties: 
+
+
+=== `Name`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== VolumeList<VolumeList>
+
+
+
+
+
+
+
+
+=== `Volumes`#h(1fr)array[#link(label("Volume"), "Volume")]
+
+
+
+
+
+
+
+
+
+
+
+== mount<mount>
+
+
+
+
+
+
+
+
+=== `Destination`#h(1fr)string
+
+
+
+
+
+
+=== `Mode`#h(1fr)string
+
+
+
+
+
+
+=== `RW`#h(1fr)boolean
+
+
+
+
+
+
+=== `Source`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+== port<port>
+
+
+
+
+
+
+
+
+=== `PrivatePort`#h(1fr)integer
+
+
+
+
+
+
+=== `PublicPort`#h(1fr)integer
+
+
+
+
+
+
+=== `Type`#h(1fr)string
+
+
+
+
+
+
+
+
+
+
+
+// required schema. Don't list them, but do a lookup and mark the field as required

@@ -4,7 +4,18 @@ expression: "run_sample_test(\"samples/several-methods.yaml\")"
 ---
 #let title = [ Several Methods API ]
 
-#set heading(numbering: "1.")
+#let numbering-limited(max-level, schema) = (..numbers) => {
+  if numbers.pos().len() <= max-level {
+    numbering(schema, ..numbers)
+  }
+}
+#set heading(numbering: numbering-limited(3, "1."))
+#let appendix(body) = {
+  set heading(numbering: numbering-limited(1, "A."), supplement: [Appendix])
+  counter(heading).update(0)
+  body
+}
+
 #set page(
   header: align(
     right + horizon,
@@ -33,42 +44,100 @@ expression: "run_sample_test(\"samples/several-methods.yaml\")"
 
 == /get-post
 
-=== get - GetThings
+=== GET - GetThings
 Get things
 
 
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[all],
-	[false],
-	[Show all containers. Only running containers are shown by default (i.e., this defaults to false)],
-	[],
+===== query: all 
 
-)
+Show all containers. Only running containers are shown by default (i.e., this defaults to false)
+
+- type:  boolean
+- style: form
 
 
 
 
-=== post - PostThings
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: array[boolean]
+
+- text/plain: array[boolean]
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 500
+server error
+
+
+
+
+
+=== POST - PostThings
 Post things
 
 Post things
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[thing],
-	[false],
-	[ID of thing to post],
-	[],
+===== path: thing 
 
-)
+ID of thing to post
+
+- type:  number
+- style: simple
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: array[string]
+
+- text/plain: array[integer]
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 500
+server error
+
 
 
 
@@ -76,39 +145,112 @@ Post things
 
 == /patch-delete
 
-=== delete - DeleteThings
+=== DELETE - DeleteThings
 Delete things
 
 Delete things
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[thing],
-	[false],
-	[ID of thing to post],
-	[],
+===== path: thing 
 
-)
+ID of thing to post
+
+- type:  number
+- style: simple
 
 
 
 
-=== patch - PatchThings
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: array[string]
+
+- text/plain: array[integer]
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 500
+server error
+
+
+
+
+
+=== PATCH - PatchThings
 Patch things
 
 Patch things
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[all],
-	[false],
-	[Show all containers. Only running containers are shown by default (i.e., this defaults to false)],
-	[],
+===== query: all 
 
-)
+Show all containers. Only running containers are shown by default (i.e., this defaults to false)
+
+- type:  boolean
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+no error
+
+
+
+- application/json: array[boolean]
+
+- text/plain: array[boolean]
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 500
+server error
+
+
+
+
+
+
+
+
+
+#pagebreak()
+#show: appendix
+
+= Schemas
+
+
+// required schema. Don't list them, but do a lookup and mark the field as required

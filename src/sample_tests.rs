@@ -9,6 +9,7 @@ fn run_sample_test<P: AsRef<Path>>(input: P) -> String {
         input: input.as_ref().into(),
         save_template: None,
         template: None,
+        param: vec![],
     };
     do_run(&args).unwrap();
     // Store the typst file for snapshot testing

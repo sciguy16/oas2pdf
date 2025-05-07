@@ -120,7 +120,8 @@ fn do_run(args: &args::Args) -> Result<()> {
     let out_file_name = args.out_file_name();
 
     let tera = make_tera(args.template.as_ref())?;
-    let tera_context = tera::Context::from_serialize(transformed)?;
+    let mut tera_context = tera::Context::from_serialize(transformed)?;
+    tera_context.insert("param", &args.param());
     let rendered = tera.render(TEMPLATE_NAME, &tera_context)?;
 
     if args.typst {
@@ -216,6 +217,7 @@ paths:
             input: "".into(),
             save_template: Some((&template_path).into()),
             template: None,
+            param: vec![],
         };
 
         do_run(&args).unwrap();
@@ -240,6 +242,7 @@ paths:
             input: (&schema_path).into(),
             save_template: None,
             template: None,
+            param: vec![],
         };
         do_run(&args).unwrap();
 
@@ -280,6 +283,7 @@ paths:
             input: (&schema_path).into(),
             save_template: None,
             template: Some((&template_path).into()),
+            param: vec![],
         };
         do_run(&args).unwrap();
 

@@ -4,7 +4,18 @@ expression: "run_sample_test(\"samples/request-body.yaml\")"
 ---
 #let title = [ Several Methods API ]
 
-#set heading(numbering: "1.")
+#let numbering-limited(max-level, schema) = (..numbers) => {
+  if numbers.pos().len() <= max-level {
+    numbering(schema, ..numbers)
+  }
+}
+#set heading(numbering: numbering-limited(3, "1."))
+#let appendix(body) = {
+  set heading(numbering: numbering-limited(1, "A."), supplement: [Appendix])
+  counter(heading).update(0)
+  body
+}
+
 #set page(
   header: align(
     right + horizon,
@@ -33,36 +44,69 @@ expression: "run_sample_test(\"samples/request-body.yaml\")"
 
 == /post
 
-=== post - PostThings
+=== POST - PostThings
 Post things
 
 Post things
+
+
+
+- application/json: 
+
+- text/plain: 
+
+
+
 
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[thing],
-	[false],
-	[ID of thing to post],
-	[],
+===== path: thing 
 
-)
+ID of thing to post
+
+- type:  number
+- style: simple
 
 
-==== Request body
-
-The input stream must be a tar archive compressed with one of the following algorithms: identity (no compression), gzip, bzip2, xz.
 
 
-#table(
-	columns: 2,
 
-	[application/json],
-	[{"type":"string"}],
 
-	[text/plain],
-	[{"type":"string"}],
+==== Response
 
-)
+==== 200
+no error
+
+
+
+- application/json: array[string]
+
+- text/plain: array[integer]
+
+
+
+
+==== 400
+bad parameter
+
+
+
+
+==== 500
+server error
+
+
+
+
+
+
+
+
+
+#pagebreak()
+#show: appendix
+
+= Schemas
+
+
+// required schema. Don't list them, but do a lookup and mark the field as required

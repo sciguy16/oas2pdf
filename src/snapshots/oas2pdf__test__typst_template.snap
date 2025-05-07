@@ -4,7 +4,18 @@ expression: written
 ---
 #let title = [ Some API ]
 
-#set heading(numbering: "1.")
+#let numbering-limited(max-level, schema) = (..numbers) => {
+  if numbers.pos().len() <= max-level {
+    numbering(schema, ..numbers)
+  }
+}
+#set heading(numbering: numbering-limited(3, "1."))
+#let appendix(body) = {
+  set heading(numbering: numbering-limited(1, "A."), supplement: [Appendix])
+  counter(heading).update(0)
+  body
+}
+
 #set page(
   header: align(
     right + horizon,
@@ -33,24 +44,59 @@ expression: written
 
 == /some/path
 
-=== get - aPath
+=== GET - aPath
 an interesting path
 
 a description
 
+
+
+
 ==== Parameters
-#table(
-	columns: 4,
-	[Name], [Required], [Description], [Schema],
 
-	[query],
-	[false],
-	[a query parameter],
-	[],
+===== query: query 
 
-	[query-no-description],
-	[false],
-	[],
-	[],
+a query parameter
 
-)
+- type:  integer
+- style: form
+
+
+
+
+===== query: query-no-description 
+
+
+
+- type:  integer
+- style: form
+
+
+
+
+
+
+==== Response
+
+==== 200
+ok
+
+
+
+- application/json: array[string]
+
+
+
+
+
+
+
+
+
+#pagebreak()
+#show: appendix
+
+= Schemas
+
+
+// required schema. Don't list them, but do a lookup and mark the field as required
