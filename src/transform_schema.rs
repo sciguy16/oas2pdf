@@ -1,4 +1,7 @@
-use openapiv3::{OpenAPI, Operation, Parameter, RefOr, RequestBody};
+use openapiv3::{
+    IndexMap, OpenAPI, Operation, Parameter, RefOr, ReferenceOr, RequestBody,
+    Schema,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -13,6 +16,7 @@ type PathMethods = BTreeMap<Method, PathInfo>;
 pub struct TransformedSchema {
     pub info: Info,
     pub sections: BTreeMap<SectionName, SectionEntry>,
+    pub schemas: IndexMap<String, ReferenceOr<Schema>>,
 }
 
 /*
@@ -134,6 +138,8 @@ pub fn transform_schema(schema: &OpenAPI) -> TransformedSchema {
             path_bit.insert("delete".to_string(), info);
         }
     }
+
+    transformed.schemas = schema.components.schemas.clone().into();
 
     transformed
 }

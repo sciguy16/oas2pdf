@@ -2,7 +2,7 @@
 
 use color_eyre::Result;
 use openapiv3::OpenAPI;
-use std::path::PathBuf;
+use std::{collections::HashMap, fmt::Write, path::PathBuf};
 use tera::Value;
 
 mod args;
@@ -35,6 +35,53 @@ fn ref_or_is_ref(value: Option<&Value>, _args: &[Value]) -> tera::Result<bool> {
     Ok(false)
 }
 
+fn ref_(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
+    if let Value::Object(object) = value {
+        if let Some(Value::String(value)) = object.get("$ref") {
+            let ref_ =
+                value.strip_prefix("#/components/schemas/").unwrap_or(value);
+
+            return Ok(format!("#link(label(\"{ref_}\"), \"{ref_}\")").into());
+        }
+    }
+
+    Ok(Value::default())
+}
+
+fn show_type(
+    value: &Value,
+    _args: &HashMap<String, Value>,
+) -> tera::Result<Value> {
+    let mut out = String::new();
+
+    if let Some(Value::String(typ)) = value.get("type") {
+        out.clone_from(typ);
+    }
+
+    if let Some(Value::Object(items)) = value.get("items") {
+        let items = if let Some(Value::String(ref_)) = items.get("$ref") {
+            let ref_ =
+                ref_.strip_prefix("#/components/schemas/").unwrap_or(ref_);
+
+            format!("#link(label(\"{ref_}\"), \"{ref_}\")")
+        } else if let Some(Value::String(typ)) = items.get("type") {
+            typ.clone()
+        } else if let Some(Value::String(typ)) = items.get("format") {
+            typ.clone()
+        } else {
+            String::new()
+        };
+
+        let _ = write!(&mut out, "[{items}]");
+    }
+
+    if out.is_empty() {
+        Ok(Value::default())
+    } else {
+        Ok(out.into())
+    }
+}
+
 fn make_tera(template: Option<&PathBuf>) -> Result<tera::Tera> {
     let mut tera = tera::Tera::default();
     match template {
@@ -47,6 +94,8 @@ fn make_tera(template: Option<&PathBuf>) -> Result<tera::Tera> {
     tera.autoescape_on(vec![""]);
     tera.set_escape_fn(typst_escaper);
     tera.register_tester("reference", ref_or_is_ref);
+    tera.register_filter("ref", ref_);
+    tera.register_filter("show_type", show_type);
     Ok(tera)
 }
 
