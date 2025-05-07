@@ -1,6 +1,6 @@
 use openapiv3::{
     IndexMap, OpenAPI, Operation, Parameter, RefOr, ReferenceOr, RequestBody,
-    Schema,
+    Responses, Schema,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -50,6 +50,7 @@ pub struct PathInfo {
     pub operation_id: Option<String>,
     pub parameters: Vec<Parameter>,
     pub request_body: Option<RefOr<RequestBody>>,
+    pub responses: Responses,
 }
 
 #[allow(dead_code)]
@@ -80,6 +81,7 @@ fn extract_path_info(item: &Operation) -> (String, PathInfo) {
             operation_id: item.operation_id.clone(),
             parameters,
             request_body: item.request_body.clone(),
+            responses: item.responses.clone(),
         },
     )
 }

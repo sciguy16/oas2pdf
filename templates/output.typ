@@ -64,15 +64,26 @@
 {% if param.schema.nullable %}- nullable{% endif %}
 
 {% endfor %}{# param #}
+{% endif %}{# param #}
 
 ==== Response
+{% for code,response in method.responses %}
+==== {{ code }}
+{{ response.description|default(value="") }}
 
-todo
-{% endif %}
+{% if response.content %}
+{% for mediatype,meta in response.content %}
+- {{ mediatype }}: {{ meta.schema|ref|safe }}{{ meta.schema|show_type|safe }}
+{% endfor %}{# (mediatype,meta) #}
+{% endif %}{# response.content %}
 
-{% endfor %}{# (method, details) #}
+{% endfor %}{# (code,response) #}
+
+{% endfor %}{# (method_name, method) #}
 {% endfor %}{# (path_name, path) #}
 {% endfor %}{# (path, item) #}
+
+{% endfor %}{# (header, section) #}
 
 #pagebreak()
 #show: appendix
@@ -101,12 +112,7 @@ Allowed values:
 {% if prop.additionalProperties %}- additional properties: {{prop.additionalProperties|ref|safe}}{% endif %}
 
 {% endfor %}{# (prop_name, prop) #}
-{% endif %}
-
-{% endfor %}{# (name, schema) #}
-
-// required schema. Don't list them, but do a lookup and mark the field as required
- 
+{% endif %}{# schema.properties #}
 
 {% if schema.oneOf %}
 One of:
@@ -115,7 +121,12 @@ One of:
 {% if variant.properties %}
 {% for name,prop in variant.properties %}
   - `{{name}}`: `{{prop.type|default(value="")}}`{{prop|ref|safe}}
-{% endfor %}
-{% endif %}
-{% endfor %}
-{% endif %}
+{% endfor %}{# (name, prop) #}
+{% endif %}{# variant.properties #}
+{% endfor %}{# variant #}
+{% endif %}{# schema.oneOf #}
+
+{% endfor %}{# (name, schema) #}
+// required schema. Don't list them, but do a lookup and mark the field as required
+ 
+
